@@ -31,7 +31,7 @@ endif
 TGT         = serialsystem
 OTHER_CSRC  = 
 OTHER_ASRC  = 
-CSRC        = tcu.c charge.c Hachiko.c log.c serialsystem.c
+CSRC        = tcu.c Hachiko.c log.c serialsystem.c
 ASRC        = 
 OBJS        = $(CSRC:.c=.o) $(ASRC:.S=.o)
 NOLINK_OBJS = $(OTHER_CSRC:.c=.o) $(OTHER_ASRC:.S=.o)
