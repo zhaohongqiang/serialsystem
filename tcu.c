@@ -110,115 +110,115 @@ struct tcu_statistics statistics[] = {
     {//0
     .can_pgn = PGN_TRC,
     .can_silence = 0,
-    .can_tolerate_silence = 250,
+    .can_tolerate_silence = 250*20,
     .can_counter = 0
     },
     {//1
     .can_pgn = PGN_CRTR,
     .can_silence = 0,
-    .can_tolerate_silence = 250,
+    .can_tolerate_silence = 250*20,
     .can_counter = 0
     },
     {//2
     .can_pgn = PGN_TST,
     .can_silence = 0,
-    .can_tolerate_silence = 250,
+    .can_tolerate_silence = 250*20,
     .can_counter = 0
     },
     {//3
     .can_pgn = PGN_CRST,
     .can_silence = 0,
-    .can_tolerate_silence = 250,
+    .can_tolerate_silence = 250*20,
     .can_counter = 0
     },
     {//4
     .can_pgn = PGN_TTS,
     .can_silence = 0,
-    .can_tolerate_silence = 500,
+    .can_tolerate_silence = 500*10,
     .can_counter = 0
     },
     {//5
     .can_pgn = PGN_CRTS,
     .can_silence = 0,
-    .can_tolerate_silence = 500,
+    .can_tolerate_silence = 500*10,
     .can_counter = 0
     },
     {//6
     .can_pgn = PGN_TCV,
     .can_silence = 0,
-    .can_tolerate_silence = 500,
+    .can_tolerate_silence = 500*10,
     .can_counter = 0
     },
     {//7
     .can_pgn = PGN_CRCV,
     .can_silence = 0,
-    .can_tolerate_silence = 500,
+    .can_tolerate_silence = 500*10,
     .can_counter = 0
     },
     {//8
     .can_pgn = PGN_TCP,
     .can_silence = 0,
-    .can_tolerate_silence = 500,
+    .can_tolerate_silence = 500*10,
     .can_counter = 0
     },
     {//9
     .can_pgn = PGN_CRCP,
     .can_silence = 0,
-    .can_tolerate_silence = 500,
+    .can_tolerate_silence = 500*10,
     .can_counter = 0
     },
     {//10
     .can_pgn = PGN_CSF,
     .can_silence = 0,
-    .can_tolerate_silence = 250,
+    .can_tolerate_silence = 250*20,
     .can_counter = 0
     },
     {//11
     .can_pgn = PGN_TRSF,
     .can_silence = 0,
-    .can_tolerate_silence = 250,
+    .can_tolerate_silence = 250*20,
     .can_counter = 0
     },
     {//12
     .can_pgn = PGN_CST,
     .can_silence = 0,
-    .can_tolerate_silence = 250,
+    .can_tolerate_silence = 250*20,
     .can_counter = 0
     },
     {//13
     .can_pgn = PGN_TRST,
     .can_silence = 0,
-    .can_tolerate_silence = 250,
+    .can_tolerate_silence = 250*20,
     .can_counter = 0
     },
     {//14
     .can_pgn = PGN_CCT,
     .can_silence = 0,
-    .can_tolerate_silence = 250,
+    .can_tolerate_silence = 250*20,
     .can_counter = 0
     },
     {//15
     .can_pgn = PGN_TRCT,
     .can_silence = 0,
-    .can_tolerate_silence = 250,
+    .can_tolerate_silence = 250*20,
     .can_counter = 0
     },
     {//16
     .can_pgn = PGN_CRF,
     .can_silence = 0,
-    .can_tolerate_silence = 250,
+    .can_tolerate_silence = 250*20,
     .can_counter = 0
     },
     {//17
     .can_pgn = PGN_CTF,
     .can_silence = 0,
-    .can_tolerate_silence = 1000,
+    .can_tolerate_silence = 1000*5+20,
     .can_counter = 0
     },
     {//18
     .can_pgn = PGN_THB,
     .can_silence = 0,
-    .can_tolerate_silence = 1000,
+    .can_tolerate_silence = 1000*5+10,
     .can_counter = 0
     }
    };
@@ -266,7 +266,7 @@ void Hachiko_packet_heart_beart_notify_proc(Hachiko_EVT evt, void *private,
                 } else {
                     thiz->heartbeat = thiz->period;
                 }
-            }else if ( thiz->stage == 0x08/*task->tcu_heartbeat_stage*/ ){
+            }else if ( thiz->stage == 0x08 ){//task->tcu_heartbeat_stage
             	if ( thiz->heartbeat < thiz->period ) {
 					thiz->heartbeat += 1;
 				} else {
@@ -274,7 +274,7 @@ void Hachiko_packet_heart_beart_notify_proc(Hachiko_EVT evt, void *private,
 					task->tcu_heartbeat_stage  = TCU_STAGE_HEAT;
 					task->tcu_stage  = TCU_STAGE_HEAT;
 				}
-            } else if ( thiz->stage == 0x09/*task->tcu_time_stage*/ ){
+            } else if ( thiz->stage == 0x09 ){//task->tcu_time_stage
             	if ( thiz->heartbeat < thiz->period ) {
 					thiz->heartbeat += 1;
 				} else {
@@ -294,55 +294,51 @@ void Hachiko_packet_heart_beart_notify_proc(Hachiko_EVT evt, void *private,
          *
          * BEM和CEM不在超时统计范围内
          */
-#if 0
+#if 1
         for ( i = 0;
               (unsigned int)i < (sizeof(statistics) / sizeof(struct tcu_statistics) ) - 2; i++ ) {
             me = &statistics[i];
-            me->can_silence ++;
+            if ( generator[i].stage == task->tcu_stage ){
+            	me->can_silence += 1;
+            }else if( generator[i].stage == 0x08 ){
+            	me->can_silence += 1;
+            } else if( generator[i].stage == 0x09 ){
+            	me->can_silence += 1;
+            }else{
+            	me->can_silence = 0;
+            }
             if ( me->can_tolerate_silence < me->can_silence ) {
                 switch (task->tcu_stage) {
+                case TCU_STAGE_HEAT:
+					log_printf(WRN, "TCU: heart_beat  "RED("timeout"));
+					//task->tcu_stage = TCU_STAGE_HEAT;
+                	break;
+                case TCU_STAGE_TIME:
+					log_printf(WRN, "TCU: time  "RED("timeout"));
+					//task->tcu_stage = TCU_STAGE_TIME;
+                	break;
                 case TCU_STAGE_CHECKVER:
-                    if (me->can_pgn != PGN_CRCV) break;
-                    if (bit_read(task, F_GUN_1_PHY_CONN_STATUS)) {
-                        if ( !bit_read(task, S_BMS_COMM_DOWN) ) {
-                            bit_set(task, S_BMS_COMM_DOWN);
-                            log_printf(WRN, "BMS: 握手阶段BMS通信"RED("故障"));
-                            task->tcu_stage = TCU_STAGE_CHECKVER;
-                        }
-                    }
+                   // if (me->can_pgn != PGN_CRCV) break;
+					log_printf(WRN, "TCU: check_version "RED("timeout"));
+					task->tcu_stage = TCU_STAGE_CHECKVER;
+					task->tcu_tmp_stage = TCU_STAGE_CHECKVER;
                     break;
-#if 0
-                case CHARGE_STAGE_CONFIGURE:
-                    if (me->can_pgn != PGN_BCP) break;
-                    if (bit_read(task, F_GUN_1_PHY_CONN_STATUS)) {
-                        if ( !bit_read(task, S_BMS_COMM_DOWN) ) {
-                            bit_set(task, S_BMS_COMM_DOWN);
-                            log_printf(WRN, "BMS: 配置阶段BMS通信"RED("故障"));
-                            task->charge_stage = CHARGE_STAGE_HANDSHACKING;
-                        }
-                    }
+                case TCU_STAGE_PARAMETER:
+                   // if (me->can_pgn != PGN_CRCP) break;
+					log_printf(WRN, "TCU: change parameter "RED("timeout"));
+					task->tcu_stage = TCU_STAGE_PARAMETER;
+					task->tcu_tmp_stage = TCU_STAGE_PARAMETER;
                     break;
-                case CHARGE_STAGE_CHARGING:
-                    if (me->can_pgn != PGN_BCL) break;
-                    if (bit_read(task, F_GUN_1_PHY_CONN_STATUS)) {
-                        if ( !bit_read(task, S_BMS_COMM_DOWN) ) {
-                            bit_set(task, S_BMS_COMM_DOWN);
-                            log_printf(WRN, "BMS: 充电阶段BMS通信"RED("故障"));
-                            task->charge_stage = CHARGE_STAGE_HANDSHACKING;
-                        }
-                    }
+                case TCU_STAGE_START:
+                   // if (me->can_pgn != PGN_CRTR) break;
+					log_printf(WRN, "TCU: start charging "RED("timeout"));
+					task->tcu_stage = TCU_STAGE_START;
                     break;
-                case CHARGE_STAGE_DONE:
-                    if (me->can_pgn != PGN_BSD) break;
-                    if (bit_read(task, F_GUN_1_PHY_CONN_STATUS)) {
-                        if ( !bit_read(task, S_BMS_COMM_DOWN) ) {
-                            bit_set(task, S_BMS_COMM_DOWN);
-                            log_printf(WRN, "BMS: 充电完成阶段BMS通信"RED("故障"));
-                            task->charge_stage = CHARGE_STAGE_HANDSHACKING;
-                        }
-                    }
-                    break;
-#endif
+                case TCU_STAGE_STOP:
+                    //if (me->can_pgn != PGN_CRST) break;
+					log_printf(WRN, "TCU: stop charging "RED("timeout"));
+					task->tcu_stage = TCU_STAGE_STOP;
+					break;
                 default:
                     break;
                 }
@@ -579,6 +575,8 @@ int about_packet_reciev_done(struct charge_task *thiz,
 	//log_printf(DBG_LV0, "TCU: packet receive. %08X", param->can_id);
     switch ( param->can_id & 0x00FF00) {
     case PGN_CRCV :// 0x000800, Charging 应答版本校验
+        //statistics[I_TCV].can_counter ++;
+        statistics[I_TCV].can_silence = 0;
         statistics[I_CRCV].can_counter ++;
         statistics[I_CRCV].can_silence = 0;
         log_printf(INF, "TCU: TCU  now  "GRN("PGN_CRCV"));
@@ -590,6 +588,8 @@ int about_packet_reciev_done(struct charge_task *thiz,
 		}
         break;
     case PGN_CRCP:
+    	//statistics[I_TCP].can_counter ++;
+		statistics[I_TCP].can_silence = 0;
     	statistics[I_CRCP].can_counter ++;
 		statistics[I_CRCP].can_silence = 0;
 		log_printf(INF, "TCU: TCU  now  "GRN("PGN_CRCP"));
@@ -609,6 +609,8 @@ int about_packet_reciev_done(struct charge_task *thiz,
 		}
     	break;
     case PGN_CRTR:
+    	//statistics[I_TRC].can_counter ++;
+		statistics[I_TRC].can_silence = 0;
     	statistics[I_CRTR].can_counter ++;
 		statistics[I_CRTR].can_silence = 0;
 		log_printf(INF, "TCU: TCU  now  "GRN("PGN_CRTR"));
@@ -628,6 +630,8 @@ int about_packet_reciev_done(struct charge_task *thiz,
 		}
     	break;
     case PGN_CRST:
+    	//statistics[I_TST].can_counter ++;
+		statistics[I_TST].can_silence = 0;
     	statistics[I_CRST].can_counter ++;
 		statistics[I_CRST].can_silence = 0;
 		log_printf(INF, "TCU: TCU  now  "GRN("PGN_CRST"));
@@ -645,6 +649,11 @@ int about_packet_reciev_done(struct charge_task *thiz,
 			thiz->tcu_tmp_stage = TCU_STAGE_STOP_STATUS;
 			log_printf(INF, "TCU: TCU change stage to "RED("TCU_STAGE_STOP_STATUS"));
 		}
+    	break;
+    case 	PGN_CRTS:
+    	statistics[I_CRTS].can_counter ++;
+		statistics[I_CRTS].can_silence = 0;
+		//log_printf(INF, "TCU: TCU  now  "GRN("PGN_CRTS"));
     	break;
     case PGN_CRF:
     	break;
