@@ -16,7 +16,6 @@
 #include "charge.h"
 #include "Hachiko.h"
 #include "tcu.h"
-#include "config.h"
 #include "log.h"
 #include "error.h"
 //计费控制单元ＴＣＵ　　　充电机Ｃ
@@ -301,14 +300,14 @@ void Hachiko_packet_heart_beart_notify_proc(Hachiko_EVT evt, void *private,
             me = &statistics[i];
             me->can_silence ++;
             if ( me->can_tolerate_silence < me->can_silence ) {
-                switch (task->charge_stage) {
+                switch (task->tcu_stage) {
                 case TCU_STAGE_CHECKVER:
                     if (me->can_pgn != PGN_CRCV) break;
                     if (bit_read(task, F_GUN_1_PHY_CONN_STATUS)) {
                         if ( !bit_read(task, S_BMS_COMM_DOWN) ) {
                             bit_set(task, S_BMS_COMM_DOWN);
                             log_printf(WRN, "BMS: 握手阶段BMS通信"RED("故障"));
-                            task->charge_stage = TCU_STAGE_CHECKVER;
+                            task->tcu_stage = TCU_STAGE_CHECKVER;
                         }
                     }
                     break;

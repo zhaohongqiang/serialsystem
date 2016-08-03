@@ -18,7 +18,6 @@
 //#include <sys/time.h>
 #include "Hachiko.h"
 #include "log.h"
-#include "config.h"
 #include "error.h"
 #define CLOCKID CLOCK_REALTIME
 #define SIG SIGRTMIN

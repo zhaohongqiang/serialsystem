@@ -5,14 +5,13 @@
 #include <pthread.h>
 #include <sys/types.h>
 #include "log.h"
-#include "config.h"
 
 int log_printf(unsigned int level, const char *fmt, ...)
 {
     char buff[512]={0};
 	va_list ap;
     //char *lvlstr[] = {"INF", "WRN", "ERR", "DBG"};
-    const char *cfg;
+    //const char *cfg;
     time_t timep;
     struct tm *p;
 

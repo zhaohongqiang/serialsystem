@@ -12,14 +12,12 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
-
 #include <linux/can.h>
 #include <linux/can/raw.h>
-#include "config.h"
 #include "error.h"
 #include "log.h"
 #include "Hachiko.h"
-#include "librf.h"
+
 extern void * thread_tcu_write_service(void *) ___THREAD_ENTRY___;
 extern void * thread_tcu_read_service(void *) ___THREAD_ENTRY___;
 //extern void * thread_tcu_heartbeat_service(void *)___THREAD_ENTRY___;
@@ -30,7 +28,6 @@ int main()
     pthread_attr_t attr;
     int s;
     int thread_done[ 8 ] = {0};
-    char buff[32];
     int errcode = 0, ret;
 
     printf(
@@ -54,7 +51,7 @@ int main()
     // 因此这里需要注意的是：
     // * 有两个配置文件是一种冗余设计
     // * 非必要的情况下，分别将系统配置和用户配置分开存储到两个文件中
-#if 1
+#if 0
     config_initlize("ontom.cfg");
     user_cfg = config_read("user_config_file");
     if ( user_cfg == NULL ) {
