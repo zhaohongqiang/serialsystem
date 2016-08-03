@@ -156,8 +156,7 @@ void Hachiko_init()
 
     log_printf(DBG_LV1, "Hachiko: timer ID is 0x%lx", (long) timerid);
 
-    /* Start the timer , 默认10ms*/
-    //freq_nanosecs = atoll(config_read("HachikoTTL"));
+    /* Start the timer , 默认1ms*/
 //# 10 ms
 //HachikoTTL=10000000
 //# 1 ms
@@ -170,6 +169,7 @@ void Hachiko_init()
         freq_nanosecs = 100000;
         // 定时器最小分辨率为0.1ms
     }
+
     its.it_value.tv_sec = freq_nanosecs / 1000000000;
     its.it_value.tv_nsec = freq_nanosecs % 1000000000;
     its.it_interval.tv_sec = its.it_value.tv_sec;

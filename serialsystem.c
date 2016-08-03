@@ -22,7 +22,7 @@
 #include "librf.h"
 extern void * thread_tcu_write_service(void *) ___THREAD_ENTRY___;
 extern void * thread_tcu_read_service(void *) ___THREAD_ENTRY___;
-
+//extern void * thread_tcu_heartbeat_service(void *)___THREAD_ENTRY___;
 int main()
 {
     const char *user_cfg = NULL;
@@ -105,7 +105,18 @@ int main()
     }
     log_printf(INF, "CAN-BUS writer start up.                           DONE.");
 #endif
-
+#if 0
+    // TCU数据包心跳线程，定时发送数据，周期1s
+    ret = pthread_create( & tid, &attr, thread_tcu_heartbeat_service,
+                          &thread_done[3]);
+    if ( 0 != ret ) {
+        errcode  = 0x1002;
+        log_printf(ERR,
+                   "CAN-BUS writer start up.                       FAILE!!!!");
+        goto die;
+    }
+    log_printf(INF, "CAN-BUS heartbeatt start up.                           DONE.");
+#endif
      if ( s == 0 ) {
         pthread_attr_destroy(&attr);
     }

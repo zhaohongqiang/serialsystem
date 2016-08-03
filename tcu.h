@@ -219,7 +219,8 @@ typedef enum {
     EVENT_CAN_INIT   = 11,
 
     // CAN 消息复位。再次执行初始化操作。
-    EVENT_CAN_RESET  = 12
+    EVENT_CAN_RESET  = 12,
+    EVENT_CAN_HEART = 13
 }EVENT_CAN;
 
 // 事件通知返回/传入参数

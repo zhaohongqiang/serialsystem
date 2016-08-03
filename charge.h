@@ -352,7 +352,8 @@ typedef enum {
     TCU_STAGE_STATUS              =0X05,//启动状态完成ｏｒ失败
     TCU_STAGE_STOP      			=0X06,//停止充电
     TCU_STAGE_STOP_STATUS =0X07,//停止充电完成
-    TCU_STAGE_ANY        			=0x08 // 任意阶段
+    TCU_STAGE_HEAT					=0X08,//心跳
+    TCU_STAGE_ANY        			=0x09 // 任意阶段
 }TCU_STAGE;
 
 
@@ -451,7 +452,8 @@ struct charge_task {
     CHARGE_TASK_STAT charge_task_stat;
     // 充电任务所处阶段
     TCU_STAGE tcu_stage;
-
+    TCU_STAGE tcu_tmp_stage;
+    TCU_STAGE tcu_heartbeat_stage;
     // 系统信号, 最多支持64 * 8 种信号标记
     // 前面 16 * 8 = 128 个信号是系统内部使用信号标记
     // 后面 的为遥信 信号定义 @ enum ONTOM_FLAG_SINGLE
@@ -518,6 +520,9 @@ struct charge_task {
     struct Hachiko_CNA_TP_private can_tp_private;
     // CAN数据包心跳
     struct Hachiko_food can_heart_beat;
+
+    //TCU心跳
+    struct Hachiko_food tcu_heartbeat;
 
     struct pgn2048_CRCV  crcv_info;//充电机版本
 

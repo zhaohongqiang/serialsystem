@@ -96,7 +96,7 @@ struct can_pack_generator generator[] = {
     .mnemonic   =  "TRCT"
     },
     {//心跳  9   pgn12544   8
-    .stage      =  TCU_STAGE_ANY,
+    .stage      =  TCU_STAGE_HEAT,
     .pgn        =  0x003100,
     .prioriy    =  6,
     .datalen    =  8,
@@ -224,6 +224,7 @@ struct tcu_statistics statistics[] = {
     }
    };
 
+
 // 数据包超时心跳包, 定时器自动复位, 一个单位时间一次
 void Hachiko_packet_heart_beart_notify_proc(Hachiko_EVT evt, void *private,
                             const struct Hachiko_food *self)
@@ -242,6 +243,14 @@ void Hachiko_packet_heart_beart_notify_proc(Hachiko_EVT evt, void *private,
                 } else {
                     thiz->heartbeat = thiz->period;
                 }
+            }else if ( thiz->stage == 0x08/*task->tcu_heartbeat_stage*/ ){
+            	if ( thiz->heartbeat < thiz->period ) {
+					thiz->heartbeat += 1;
+				} else {
+					thiz->heartbeat = thiz->period;
+					task->tcu_heartbeat_stage  = TCU_STAGE_HEAT;
+					task->tcu_stage  = TCU_STAGE_HEAT;
+				}
             } else {
                 thiz->heartbeat = 0;
             }
@@ -323,6 +332,15 @@ static int can_packet_callback(
         struct charge_task * thiz, EVENT_CAN ev, struct event_struct* param)
 {
     switch ( ev ) {
+    case EVENT_CAN_HEART:
+        thiz->can_tcu_status = CAN_NORMAL;
+//        thiz->can_heart_beat.Hachiko_notify_proc=
+//                        Hachiko_packet_heart_beart_notify_proc;
+//        Hachiko_new(&thiz->can_heart_beat, HACHIKO_AUTO_FEED, 1, NULL);
+		log_printf(INF, "TCU: CHARGER now stage to "RED("TCU_STAGE_HEAT"));
+		thiz->tcu_heartbeat_stage = TCU_STAGE_HEAT;
+		thiz->tcu_stage = TCU_STAGE_HEAT;
+    	break;
     case EVENT_CAN_INIT:
         // 事件循环函数初始化
         thiz->can_tcu_status = CAN_NORMAL;
@@ -331,6 +349,7 @@ static int can_packet_callback(
         Hachiko_new(&thiz->can_heart_beat, HACHIKO_AUTO_FEED, 1, NULL);
         log_printf(INF, "TCU: CHARGER change stage to "RED("TCU_STAGE_CHECKVER"));
         thiz->tcu_stage = TCU_STAGE_CHECKVER;
+        thiz->tcu_tmp_stage = TCU_STAGE_CHECKVER;
         break;
     case EVENT_CAN_RESET:
         // 事件循环函数复位
@@ -396,59 +415,62 @@ static int can_packet_callback(
          * 在若干个循环控制周期内，数据包都能按照既定的周期发送完成.
          */
         switch ( thiz->tcu_stage ) {
-        case TCU_STAGE_INVALID:
-            param->evt_param = EVT_RET_ERR;
-            break;
-        case TCU_STAGE_CHECKVER:
-        	if ( generator[TCU_TCV].heartbeat >= generator[TCU_TCV].period ) {
-        		//printf( "now  CHARGE_STAGE_HANDSHACKING generator[0].heartbeat= %d  generator[0].period= %d\n",generator[0].heartbeat,generator[0].period);
-        		gen_packet_tcu_PGN1792(thiz, param);
-                generator[0].heartbeat = 0;
-            }
-//        	if ( generator[TCU_THB].heartbeat >= generator[TCU_THB].period ) {
-//        		printf( "now  CHARGE_STAGE_HANDSHACKING generator[TCU_THB].heartbeat= %d  generator[TCU_THB].period= %d\n",generator[TCU_THB].heartbeat,generator[TCU_THB].period);
-//        		gen_packet_tcu_PGN12544(thiz, param);
-//                generator[0].heartbeat = 0;
-//            }
-            break;
-        case TCU_STAGE_PARAMETER:
-        	if ( generator[TCU_TCP].heartbeat >= generator[TCU_TCP].period ) {
-				gen_packet_tcu_PGN2304(thiz, param);
-				generator[0].heartbeat = 0;
-			}
-        	break;
-        case TCU_STAGE_CONNECT:
-        	if ( generator[TCU_TRCT].heartbeat >= generator[TCU_TRCT].period ) {
-				gen_packet_tcu_PGN5632(thiz, param);
-				generator[0].heartbeat = 0;
-			}
-        	break;
-        case TCU_STAGE_START:
-        	if ( generator[TCU_TRC].heartbeat >= generator[TCU_TRC].period ) {
-				gen_packet_tcu_PGN256(thiz, param);
-				generator[0].heartbeat = 0;
-			}
-        	break;
-        case TCU_STAGE_STATUS:
-        	if ( generator[TCU_TRSF].heartbeat >= generator[TCU_TRSF].period ) {
-				gen_packet_tcu_PGN4608(thiz, param);
-				generator[0].heartbeat = 0;
-			}
-        	break;
-        case TCU_STAGE_STOP:
-        	if ( generator[TCU_TST].heartbeat >= generator[TCU_TST].period ) {
-				gen_packet_tcu_PGN768(thiz, param);
-				generator[0].heartbeat = 0;
-			}
-        	break;
-        case TCU_STAGE_STOP_STATUS:
-        	if ( generator[TCU_TRST].heartbeat >= generator[TCU_TRST].period ) {
-				gen_packet_tcu_PGN5120(thiz, param);
-				generator[0].heartbeat = 0;
-			}
-        	break;
-        default:
-            break;
+			case TCU_STAGE_INVALID:
+				param->evt_param = EVT_RET_ERR;
+				break;
+			case TCU_STAGE_HEAT:
+				if ( generator[TCU_THB].heartbeat >= generator[TCU_THB].period ) {
+					gen_packet_tcu_PGN12544(thiz, param);
+					generator[TCU_THB].heartbeat = 0;
+					//thiz->tcu_stage = thiz->tcu_heartbeat_stage ;
+				}
+				break;
+			case TCU_STAGE_CHECKVER:
+				//printf( "now  CHARGE_STAGE_HANDSHACKING generator[TCU_TCV].heartbeat= %d  generator[TCU_TCV].period= %d\n",generator[TCU_TCV].heartbeat,generator[TCU_TCV].period);
+				if ( generator[TCU_TCV].heartbeat >= generator[TCU_TCV].period ) {
+					//printf( "now  CHARGE_STAGE_HANDSHACKING generator[0].heartbeat= %d  generator[0].period= %d\n",generator[0].heartbeat,generator[0].period);
+					gen_packet_tcu_PGN1792(thiz, param);
+					generator[TCU_TCV].heartbeat = 0;
+				}
+				break;
+			case TCU_STAGE_PARAMETER:
+				if ( generator[TCU_TCP].heartbeat >= generator[TCU_TCP].period ) {
+					gen_packet_tcu_PGN2304(thiz, param);
+					generator[TCU_TCP].heartbeat = 0;
+				}
+				break;
+			case TCU_STAGE_CONNECT:
+				if ( generator[TCU_TRCT].heartbeat >= generator[TCU_TRCT].period ) {
+					gen_packet_tcu_PGN5632(thiz, param);
+					generator[TCU_TRCT].heartbeat = 0;
+				}
+				break;
+			case TCU_STAGE_START:
+				if ( generator[TCU_TRC].heartbeat >= generator[TCU_TRC].period ) {
+					gen_packet_tcu_PGN256(thiz, param);
+					generator[TCU_TRC].heartbeat = 0;
+				}
+				break;
+			case TCU_STAGE_STATUS:
+				if ( generator[TCU_TRSF].heartbeat >= generator[TCU_TRSF].period ) {
+					gen_packet_tcu_PGN4608(thiz, param);
+					generator[TCU_TRSF].heartbeat = 0;
+				}
+				break;
+			case TCU_STAGE_STOP:
+				if ( generator[TCU_TST].heartbeat >= generator[TCU_TST].period ) {
+					gen_packet_tcu_PGN768(thiz, param);
+					generator[TCU_TST].heartbeat = 0;
+				}
+				break;
+			case TCU_STAGE_STOP_STATUS:
+				if ( generator[TCU_TRST].heartbeat >= generator[TCU_TRST].period ) {
+					gen_packet_tcu_PGN5120(thiz, param);
+					generator[TCU_TRST].heartbeat = 0;
+				}
+				break;
+			default:
+				break;
         }
         break;
     case EVENT_TX_TP_RTS: // 本系统中TCU通信暂时不会使用
@@ -507,6 +529,8 @@ static int can_packet_callback(
     return 0;
 }
 
+
+
 // CAN数据包接受完成
 int about_packet_reciev_done(struct charge_task *thiz,
                              struct event_struct *param)
@@ -520,6 +544,7 @@ int about_packet_reciev_done(struct charge_task *thiz,
 
         if ( thiz->tcu_stage == TCU_STAGE_CHECKVER) {
 			thiz->tcu_stage = TCU_STAGE_PARAMETER;
+			thiz->tcu_tmp_stage = TCU_STAGE_PARAMETER;
 			log_printf(INF, "TCU: TCU change stage to "RED("TCU_STAGE_PARAMETER"));
 		}
         break;
@@ -538,6 +563,7 @@ int about_packet_reciev_done(struct charge_task *thiz,
 		log_printf(INF, "TCU: TCU  now  "GRN("PGN_CCT"));
 		 if ( thiz->tcu_stage == TCU_STAGE_PARAMETER) {
 			thiz->tcu_stage = TCU_STAGE_CONNECT;
+			thiz->tcu_tmp_stage = TCU_STAGE_CONNECT;
 			log_printf(INF, "TCU: TCU change stage to "RED("TCU_STAGE_CONNECT"));
 		}
     	break;
@@ -556,6 +582,7 @@ int about_packet_reciev_done(struct charge_task *thiz,
 		log_printf(INF, "TCU: TCU  now  "GRN("PGN_CSF"));
 		 if ( thiz->tcu_stage == TCU_STAGE_START) {
 			thiz->tcu_stage = TCU_STAGE_STATUS;
+			thiz->tcu_tmp_stage = TCU_STAGE_STATUS;
 			log_printf(INF, "TCU: TCU now stage to "RED("TCU_STAGE_START"));
 		}
     	break;
@@ -574,6 +601,7 @@ int about_packet_reciev_done(struct charge_task *thiz,
 		log_printf(INF, "TCU: TCU  now  "GRN("PGN_CST"));
 		 if ( thiz->tcu_stage == TCU_STAGE_STOP) {
 			thiz->tcu_stage = TCU_STAGE_STOP_STATUS;
+			thiz->tcu_tmp_stage = TCU_STAGE_STOP_STATUS;
 			log_printf(INF, "TCU: TCU change stage to "RED("TCU_STAGE_STOP_STATUS"));
 		}
     	break;
@@ -601,12 +629,11 @@ int about_packet_transfer_done(struct charge_task *thiz,
     		break;
     	case PGN_TTS:
     		break;
-    	case PGN_THB:
-    		break;
     	case PGN_TRCT:
     		log_printf(INF, "TCU: TCU  now  "GRN("PGN_TRCT"));
     		 if ( thiz->tcu_stage == TCU_STAGE_CONNECT) {
 				thiz->tcu_stage = TCU_STAGE_START;
+				thiz->tcu_tmp_stage = TCU_STAGE_START;
 				log_printf(INF, "TCU: TCU change stage to "RED("TCU_STAGE_START"));
 				//task->can_tcu_status = CAN_NORMAL;
 				//can_packet_callback(task, EVENT_TX_PRE, &param);
@@ -617,9 +644,15 @@ int about_packet_transfer_done(struct charge_task *thiz,
     		log_printf(INF, "TCU: TCU  now  "GRN("PGN_TRSF"));
     		if ( thiz->tcu_stage == TCU_STAGE_STATUS) {
 				thiz->tcu_stage = TCU_STAGE_STOP;
+				thiz->tcu_tmp_stage = TCU_STAGE_STOP;
 				log_printf(INF, "TCU: TCU change stage to "RED("TCU_STAGE_STOP"));
 				can_packet_callback(task, EVENT_TX_REQUEST, &param);
 			}
+    		break;
+    	case  PGN_THB:
+    		//thiz->tcu_tmp_stage = thiz->tcu_stage;
+    		//thiz->tcu_heartbeat_stage = TCU_STAGE_ANY;
+    		thiz->tcu_stage = thiz->tcu_tmp_stage;
     		break;
     	default:
     		break;
@@ -658,8 +691,10 @@ void *thread_tcu_write_service(void *arg) ___THREAD_ENTRY___
     param.buff_payload = 0;
     param.evt_param = EVT_RET_INVALID;
 
+
     // 进行数据结构的初始化操作
     can_packet_callback(task, EVENT_CAN_INIT, &param);
+    can_packet_callback(task, EVENT_CAN_HEART, &param);
 
     while ( ! *done ) {
         usleep(5000);
@@ -673,6 +708,7 @@ void *thread_tcu_write_service(void *arg) ___THREAD_ENTRY___
         param.buff_size = sizeof(txbuff);
         param.evt_param = EVT_RET_INVALID;
         if ( task->can_tcu_status & CAN_NORMAL ) {
+        	//can_packet_callback(task, EVENT_CAN_INIT, &param);
             can_packet_callback(task, EVENT_TX_REQUEST, &param);
         } else if ( task->can_tcu_status & CAN_TP_RD ) { // 连接管理读模式, 多数据包读
             	switch ( task->can_tcu_status & 0xF0 ) {
@@ -783,6 +819,7 @@ void Hachiko_CAN_TP_notify_proc(Hachiko_EVT evt, void *private,
 
     }
 }
+
 
 // tcu 通信 读 服务线程
 // 提供tcu通信服务
