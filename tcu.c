@@ -42,11 +42,11 @@ struct can_pack_generator generator[] = {
 	.mnemonic   =  "TST"
 	},
 	{//下发对时  8  pgn1280  2
-	.stage      =  TCU_STAGE_ANY,
+	.stage      =  TCU_STAGE_TIME,
 	.pgn        =  0x000500,
 	.prioriy    =  6,
 	.datalen    =  8,
-	.period     =  500,
+	.period     =  510,
 	.heartbeat   =  0,
 	.mnemonic   =  "TTS"
 	},
@@ -100,7 +100,7 @@ struct can_pack_generator generator[] = {
     .pgn        =  0x003100,
     .prioriy    =  6,
     .datalen    =  8,
-    .period     =  1000,
+    .period     =  1010,
     .heartbeat   =  0,
     .mnemonic   =  "THB"
     }
@@ -223,7 +223,31 @@ struct tcu_statistics statistics[] = {
     .can_counter = 0
     }
    };
-
+//void Hachiko_packet_tcu_heart_beart_notify_proc(Hachiko_EVT evt, void *private,
+//                            const struct Hachiko_food *self)
+//{
+//	 if (evt == HACHIKO_TIMEOUT ) {
+//	        int i = 0;
+//	        struct can_pack_generator *thiz;
+//	        struct tcu_statistics *me;
+//	        for ( i = 0;
+//	              (unsigned int)i < sizeof(generator) / sizeof(struct can_pack_generator); i++ ) {
+//	            thiz = &generator[i];
+//	            if ( thiz->stage == 0x08/*task->tcu_heartbeat_stage*/ ){
+//	            	if ( thiz->heartbeat < thiz->period ) {
+//						thiz->heartbeat += 1;
+//					} else {
+//						thiz->heartbeat = thiz->period;
+//						task->tcu_heartbeat_stage  = TCU_STAGE_HEAT;
+//						task->tcu_tmp_stage = task->tcu_stage;
+//						task->tcu_stage  = TCU_STAGE_HEAT;
+//					}
+//	            } else {
+//	                thiz->heartbeat = 0;
+//	            }
+//	        }
+//	 }
+//}
 
 // 数据包超时心跳包, 定时器自动复位, 一个单位时间一次
 void Hachiko_packet_heart_beart_notify_proc(Hachiko_EVT evt, void *private,
@@ -250,6 +274,14 @@ void Hachiko_packet_heart_beart_notify_proc(Hachiko_EVT evt, void *private,
 					thiz->heartbeat = thiz->period;
 					task->tcu_heartbeat_stage  = TCU_STAGE_HEAT;
 					task->tcu_stage  = TCU_STAGE_HEAT;
+				}
+            } else if ( thiz->stage == 0x09/*task->tcu_time_stage*/ ){
+            	if ( thiz->heartbeat < thiz->period ) {
+					thiz->heartbeat += 1;
+				} else {
+					thiz->heartbeat = thiz->period;
+					task->tcu_time_stage  = TCU_STAGE_TIME;
+					task->tcu_stage  = TCU_STAGE_TIME;
 				}
             } else {
                 thiz->heartbeat = 0;
@@ -332,11 +364,15 @@ static int can_packet_callback(
         struct charge_task * thiz, EVENT_CAN ev, struct event_struct* param)
 {
     switch ( ev ) {
+    case EVENT_CAN_TIME:
+    	log_printf(INF, "TCU: CHARGER now stage to "RED("TCU_STAGE_TIME"));
+		thiz->tcu_time_stage = TCU_STAGE_TIME;
+		thiz->tcu_stage = TCU_STAGE_TIME;
+    	break;
     case EVENT_CAN_HEART:
         thiz->can_tcu_status = CAN_NORMAL;
-//        thiz->can_heart_beat.Hachiko_notify_proc=
-//                        Hachiko_packet_heart_beart_notify_proc;
-//        Hachiko_new(&thiz->can_heart_beat, HACHIKO_AUTO_FEED, 1, NULL);
+        //thiz->tcu_heartbeat.Hachiko_notify_proc=
+        //		Hachiko_packet_tcu_heart_beart_notify_proc;
 		log_printf(INF, "TCU: CHARGER now stage to "RED("TCU_STAGE_HEAT"));
 		thiz->tcu_heartbeat_stage = TCU_STAGE_HEAT;
 		thiz->tcu_stage = TCU_STAGE_HEAT;
@@ -417,6 +453,12 @@ static int can_packet_callback(
         switch ( thiz->tcu_stage ) {
 			case TCU_STAGE_INVALID:
 				param->evt_param = EVT_RET_ERR;
+				break;
+			case TCU_STAGE_TIME:
+				if ( generator[TCU_TTS].heartbeat >= generator[TCU_TTS].period ) {
+					gen_packet_tcu_PGN1280(thiz, param);
+					generator[TCU_TTS].heartbeat = 0;
+				}
 				break;
 			case TCU_STAGE_HEAT:
 				if ( generator[TCU_THB].heartbeat >= generator[TCU_THB].period ) {
@@ -605,6 +647,10 @@ int about_packet_reciev_done(struct charge_task *thiz,
 			log_printf(INF, "TCU: TCU change stage to "RED("TCU_STAGE_STOP_STATUS"));
 		}
     	break;
+    case PGN_CRF:
+    	break;
+    case PGN_CTF:
+    	break;
     default:
         log_printf(WRN, "TCU: un-recognized PGN %08X",
                    param->can_id);
@@ -628,6 +674,7 @@ int about_packet_transfer_done(struct charge_task *thiz,
     	case PGN_TST:
     		break;
     	case PGN_TTS:
+    		thiz->tcu_stage = thiz->tcu_tmp_stage;
     		break;
     	case PGN_TRCT:
     		log_printf(INF, "TCU: TCU  now  "GRN("PGN_TRCT"));
@@ -695,7 +742,7 @@ void *thread_tcu_write_service(void *arg) ___THREAD_ENTRY___
     // 进行数据结构的初始化操作
     can_packet_callback(task, EVENT_CAN_INIT, &param);
     can_packet_callback(task, EVENT_CAN_HEART, &param);
-
+    can_packet_callback(task, EVENT_CAN_TIME, &param);
     while ( ! *done ) {
         usleep(5000);
 
@@ -708,7 +755,6 @@ void *thread_tcu_write_service(void *arg) ___THREAD_ENTRY___
         param.buff_size = sizeof(txbuff);
         param.evt_param = EVT_RET_INVALID;
         if ( task->can_tcu_status & CAN_NORMAL ) {
-        	//can_packet_callback(task, EVENT_CAN_INIT, &param);
             can_packet_callback(task, EVENT_TX_REQUEST, &param);
         } else if ( task->can_tcu_status & CAN_TP_RD ) { // 连接管理读模式, 多数据包读
             	switch ( task->can_tcu_status & 0xF0 ) {
