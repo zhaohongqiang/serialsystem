@@ -156,7 +156,9 @@ struct pgn2560_CRCP{//应答参数
 };
 
 struct pgn4352_CSF{//Charging启动完成状态信息
-
+		u8 spn4352_port;//0-255
+		u8 spn4352_load_control;//负荷控制开关 1启用，2关闭，其他无效  根据用户类型提供不同功率输出
+		u8 spn4352_status;//0成功；1失败
 };
 struct pgn4608_TRSF{//TCU应答启动完成
 		u8 spn4608_port;//0-255
@@ -164,7 +166,9 @@ struct pgn4608_TRSF{//TCU应答启动完成
 		u8 spn4608_status;//0成功；1失败
 };
 struct pgn4864_CST{//Charging停止充电完成状态信息
-
+		u8 spn4864_port;//0-255
+		u8 spn4864_Stop_reason;//停止原因 Stop reason
+		u8 spn4864_status;//0成功；1失败
 };
 struct pgn5120_TRST{//TCU应答停止完成
 		u8 spn5120_port;//0-255
@@ -179,10 +183,27 @@ struct pgn5632_TRCT{//TCU应答连接确认
 		u8 spn5632_status;//0成功；1失败
 };
 struct pgn8448_CRF{//Charging遥信帧
-
+		u8 spn8448_port;//0-255
+		u8 spn8448_status[4];//工作状态  0000-待机0001-工作 0010-充满 0011-告警0100故障
+		u8 connect_confirm_switch_status;//连接确认开关状态 布尔型, 0连接，1未连接
+		u8 emergency_stop;//急停动作告警  布尔型, 0正常，1异常
+		u8 arrester_fault;//避雷器故障  布尔型, 0正常，1异常
+		u8 gun_fault;//充电枪未归位  布尔型, 0正常，1异常
+		u8 Over_temperature_fault;//过温故障  布尔型, 0正常，1异常
+		u8 In_vol_over;//输入电压过压  布尔型, 0正常，1异常
+		u8 In_vol_under;//输入电压欠压  布尔型, 0正常，1异常
+		u8 Out_contactor_status;//输出接触器状态  布尔型, 0分断，1闭合
+		u8 Vehicle_control_guid_alarm;//充电中车辆控制导引告警  布尔型, 0正常，1异常
+		u8 AC_contactor_fault;//交流接触器故障  布尔型, 0正常，1异常
+		u8 Out_over_current;//输出过流告警  布尔型, 0正常，1保护
+		u8 Out_over_current_protection_action;//输出过流保护动作  布尔型, 0正常，1异常
+		u8 Other_faults[2];//其它类型故障  充电机私有告警和故障信息，第1个八位组为告警信息编号，第2个八位组为告警信息值（布尔型, 变化上传；0正常，1异常）
 };
 struct pgn8704_CTF{//Charging遥测帧
-
+		u8 spn8704_port;//0-255
+		u8  spn8704_out_vol;//输出电压    精确到小数点后1位0V - 450V
+		u8  spn8704_out_cur;//输出电流   精确到小数点后2位0A - 70A
+		u8  spn8704_guid_vol;//导引电压  精确到小数点后2位0A - 12V
 };
 struct pgn12544_THB{//TCU心跳帧
 		u8 spn12544_port;//0-255
@@ -479,6 +500,16 @@ int gen_packet_tcu_PGN5120(struct charge_task * thiz,
                         struct event_struct* param);
 int gen_packet_tcu_PGN5632(struct charge_task * thiz,
 						struct event_struct* param);
+
+int get_data_tcu_PGN1792(struct charge_task * thiz);
+int get_data_tcu_PGN2304(struct charge_task * thiz);
+int get_data_tcu_PGN5632(struct charge_task * thiz);
+int get_data_tcu_PGN256(struct charge_task * thiz);
+int get_data_tcu_PGN768(struct charge_task * thiz);
+int get_data_tcu_PGN1280(struct charge_task * thiz);
+int get_data_tcu_PGN4608(struct charge_task * thiz);
+int get_data_tcu_PGN5120(struct charge_task * thiz);
+int get_data_tcu_PGN12544(struct charge_task * thiz);
 
 //1字节crc16计算
 static inline void calc_crc16(unsigned short *crc, unsigned short  crcbuf)

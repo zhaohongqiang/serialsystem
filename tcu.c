@@ -293,7 +293,7 @@ void Hachiko_packet_heart_beart_notify_proc(Hachiko_EVT evt, void *private,
          *
          * BEM和CEM不在超时统计范围内
          */
-#if 1
+#if 0
         for ( i = 0;
               (unsigned int)i < (sizeof(statistics) / sizeof(struct tcu_statistics) ) - 2; i++ ) {
             me = &statistics[i];
@@ -1129,6 +1129,14 @@ int gen_packet_tcu_PGN1792(struct charge_task * thiz, struct event_struct* param
 
     return 0;
 }
+
+int get_data_tcu_PGN1792(struct charge_task * thiz){
+    thiz->tcv_info.spn_tcu_version[0] = 12;
+    thiz->tcv_info.spn_tcu_version[1] = 10;
+	return 0;
+}
+
+
 // TCU下发参数
 int gen_packet_tcu_PGN2304(struct charge_task * thiz, struct event_struct* param)
 {
