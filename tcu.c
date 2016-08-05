@@ -584,6 +584,7 @@ int about_packet_reciev_done(struct charge_task *thiz,
 			thiz->tcu_stage = TCU_STAGE_PARAMETER;
 			thiz->tcu_tmp_stage = TCU_STAGE_PARAMETER;
 			log_printf(INF, "TCU: TCU change stage to "RED("TCU_STAGE_PARAMETER"));
+			recv_data_tcu_PGN2048(thiz,param);
 		}
         break;
     case PGN_CRCP:
@@ -594,6 +595,7 @@ int about_packet_reciev_done(struct charge_task *thiz,
 		log_printf(INF, "TCU: TCU  now  "GRN("PGN_CRCP"));
 		 if ( thiz->tcu_stage == TCU_STAGE_PARAMETER) {
 			//thiz->charge_stage = TCU_STAGE_CONNECT;
+			 recv_data_tcu_PGN2560(thiz,param);
 			log_printf(INF, "TCU: TCU now stage to "RED("TCU_STAGE_PARAMETER"));
 		}
     	break;
@@ -604,6 +606,7 @@ int about_packet_reciev_done(struct charge_task *thiz,
 		 if ( thiz->tcu_stage == TCU_STAGE_PARAMETER) {
 			thiz->tcu_stage = TCU_STAGE_CONNECT;
 			thiz->tcu_tmp_stage = TCU_STAGE_CONNECT;
+			recv_data_tcu_PGN5376(thiz,param);
 			log_printf(INF, "TCU: TCU change stage to "RED("TCU_STAGE_CONNECT"));
 		}
     	break;
@@ -615,6 +618,7 @@ int about_packet_reciev_done(struct charge_task *thiz,
 		log_printf(INF, "TCU: TCU  now  "GRN("PGN_CRTR"));
 		 if ( thiz->tcu_stage == TCU_STAGE_START) {
 			//thiz->charge_stage = TCU_STAGE_STATUS;
+			 recv_data_tcu_PGN512(thiz,param);
 			log_printf(INF, "TCU: TCU now stage to "RED("TCU_STAGE_START"));
 		}
     	break;
@@ -625,6 +629,7 @@ int about_packet_reciev_done(struct charge_task *thiz,
 		 if ( thiz->tcu_stage == TCU_STAGE_START) {
 			thiz->tcu_stage = TCU_STAGE_STATUS;
 			thiz->tcu_tmp_stage = TCU_STAGE_STATUS;
+			recv_data_tcu_PGN4352(thiz,param);
 			log_printf(INF, "TCU: TCU now stage to "RED("TCU_STAGE_START"));
 		}
     	break;
@@ -636,6 +641,7 @@ int about_packet_reciev_done(struct charge_task *thiz,
 		log_printf(INF, "TCU: TCU  now  "GRN("PGN_CRST"));
 		 if ( thiz->tcu_stage == TCU_STAGE_STOP) {
 			//thiz->charge_stage = TCU_STAGE_STOP_STATUS;
+			 recv_data_tcu_PGN1024(thiz,param);
 			log_printf(INF, "TCU: TCU now stage to "RED("TCU_STAGE_STOP"));
 		}
     	break;
@@ -646,6 +652,7 @@ int about_packet_reciev_done(struct charge_task *thiz,
 		 if ( thiz->tcu_stage == TCU_STAGE_STOP) {
 			thiz->tcu_stage = TCU_STAGE_STOP_STATUS;
 			thiz->tcu_tmp_stage = TCU_STAGE_STOP_STATUS;
+			recv_data_tcu_PGN4864(thiz,param);
 			log_printf(INF, "TCU: TCU change stage to "RED("TCU_STAGE_STOP_STATUS"));
 		}
     	break;
@@ -653,10 +660,17 @@ int about_packet_reciev_done(struct charge_task *thiz,
     	statistics[I_CRTS].can_counter ++;
 		statistics[I_CRTS].can_silence = 0;
 		//log_printf(INF, "TCU: TCU  now  "GRN("PGN_CRTS"));
+		recv_data_tcu_PGN1536(thiz,param);
     	break;
     case PGN_CRF:
+    	statistics[I_CRF].can_counter ++;
+		statistics[I_CRF].can_silence = 0;
+		recv_data_tcu_PGN8448(thiz,param);
     	break;
     case PGN_CTF:
+    	statistics[I_CTF].can_counter ++;
+		statistics[I_CTF].can_silence = 0;
+		recv_data_tcu_PGN8704(thiz,param);
     	break;
     default:
         log_printf(WRN, "TCU: un-recognized PGN %08X",
@@ -1423,15 +1437,42 @@ int recv_data_tcu_PGN512(struct charge_task * thiz,struct event_struct* param){
 	return 0;
 }
 int recv_data_tcu_PGN1024(struct charge_task * thiz,struct event_struct* param){
-
+	memcpy(&thiz->crst_info, param->buff.rx_buff, sizeof(struct pgn1024_CRST));
 	return 0;
 }
-int recv_data_tcu_PGN1536(struct charge_task * thiz,struct event_struct* param){return 0;}
-int recv_data_tcu_PGN2048(struct charge_task * thiz,struct event_struct* param){return 0;}
-int recv_data_tcu_PGN2560(struct charge_task * thiz,struct event_struct* param){return 0;}
-int recv_data_tcu_PGN4352(struct charge_task * thiz,struct event_struct* param){return 0;}
-int recv_data_tcu_PGN4864(struct charge_task * thiz,struct event_struct* param){return 0;}
-int recv_data_tcu_PGN5376(struct charge_task * thiz,struct event_struct* param){return 0;}
-int recv_data_tcu_PGN8448(struct charge_task * thiz,struct event_struct* param){return 0;}
-int recv_data_tcu_PGN8704(struct charge_task * thiz,struct event_struct* param){return 0;}
+int recv_data_tcu_PGN1536(struct charge_task * thiz,struct event_struct* param){
+	memcpy(&thiz->crts_info, param->buff.rx_buff, sizeof(struct pgn1536_CRTS));
+	return 0;
+}
+int recv_data_tcu_PGN2048(struct charge_task * thiz,struct event_struct* param){
+
+	memcpy(&thiz->crcv_info, param->buff.rx_buff, sizeof(struct pgn2048_CRCV));
+	printf("thiz->crcv_info==%d %d\n",thiz->crcv_info.spn_charging_version[0],thiz->crcv_info.spn_charging_version[1]);
+	return 0;
+}
+int recv_data_tcu_PGN2560(struct charge_task * thiz,struct event_struct* param){
+	memcpy(&thiz->crcp_info, param->buff.rx_buff, sizeof(struct pgn2560_CRCP));
+	return 0;
+}
+int recv_data_tcu_PGN4352(struct charge_task * thiz,struct event_struct* param){
+	memcpy(&thiz->csf_info, param->buff.rx_buff, sizeof(struct pgn4352_CSF));
+	return 0;
+}
+int recv_data_tcu_PGN4864(struct charge_task * thiz,struct event_struct* param){
+
+	memcpy(&thiz->cst_info, param->buff.rx_buff, sizeof(struct pgn4864_CST));
+	return 0;
+}
+int recv_data_tcu_PGN5376(struct charge_task * thiz,struct event_struct* param){
+	memcpy(&thiz->cct_info, param->buff.rx_buff, sizeof(struct pgn5376_CCT));
+	return 0;
+}
+int recv_data_tcu_PGN8448(struct charge_task * thiz,struct event_struct* param){
+	memcpy(&thiz->crf_info, param->buff.rx_buff, sizeof(struct pgn8448_CRF));
+	return 0;
+}
+int recv_data_tcu_PGN8704(struct charge_task * thiz,struct event_struct* param){
+	memcpy(&thiz->ctf_info, param->buff.rx_buff, sizeof(struct pgn8704_CTF));
+	return 0;
+}
 
