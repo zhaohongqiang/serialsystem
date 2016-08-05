@@ -141,7 +141,7 @@ struct pgn1792_TCV{//版本校验
 	 // TCU 通信协议版本号, 12.10
 	    unsigned char spn_tcu_version[2];
 };
-struct pgn2048_CRCV{//版本校验
+struct pgn2048_CRCV{//版本确认
 	 // Charging 通信协议版本号, 12.10
 	    unsigned char spn_charging_version[2];
 };
@@ -463,7 +463,6 @@ struct charge_task {
     //TCU心跳
     struct Hachiko_food tcu_heartbeat;
 
-    struct pgn2048_CRCV  crcv_info;//充电机版本
     struct pgn1792_TCV  tcv_info;//TCU版本
     struct pgn2304_TCP  tcp_info;//下发参数
     struct pgn256_TRC trc_info;////启动充电
@@ -473,6 +472,17 @@ struct charge_task {
     struct pgn4608_TRSF trsf_info;//启动完成应答
     struct pgn5120_TRST trst_info;//停止完成应答
 	struct pgn5632_TRCT trct_info;//连接确认应答
+
+	struct pgn512_CRRC crrc_info;//应答启动充电
+	struct pgn1024_CRST crst_info;//应答停止充电
+	struct pgn1536_CRTS  crts_info;//应答对时
+	struct pgn2048_CRCV crcv_info;//充电机版本确认
+	struct pgn2560_CRCP crcp_info;//应答参数
+	struct pgn4352_CSF csf_info;//Charging启动完成状态信息
+	struct pgn4864_CST cst_info;//Charging停止充电完成状态信息
+	struct pgn5376_CCT cct_info;//Charging连接确认
+	struct pgn8448_CRF crf_info;//Charging遥信帧
+	struct pgn8704_CTF ctf_info;//Charging遥测帧
 };
 struct charge_task tom;
 struct charge_task *task = &tom;
@@ -510,6 +520,18 @@ int get_data_tcu_PGN1280(struct charge_task * thiz);
 int get_data_tcu_PGN4608(struct charge_task * thiz);
 int get_data_tcu_PGN5120(struct charge_task * thiz);
 int get_data_tcu_PGN12544(struct charge_task * thiz);
+
+int recv_data_tcu_PGN512(struct charge_task * thiz,struct event_struct* param);
+int recv_data_tcu_PGN1024(struct charge_task * thiz,struct event_struct* param);
+int recv_data_tcu_PGN1536(struct charge_task * thiz,struct event_struct* param);
+int recv_data_tcu_PGN2048(struct charge_task * thiz,struct event_struct* param);
+int recv_data_tcu_PGN2560(struct charge_task * thiz,struct event_struct* param);
+int recv_data_tcu_PGN4352(struct charge_task * thiz,struct event_struct* param);
+int recv_data_tcu_PGN4864(struct charge_task * thiz,struct event_struct* param);
+int recv_data_tcu_PGN5376(struct charge_task * thiz,struct event_struct* param);
+int recv_data_tcu_PGN8448(struct charge_task * thiz,struct event_struct* param);
+int recv_data_tcu_PGN8704(struct charge_task * thiz,struct event_struct* param);
+
 
 //1字节crc16计算
 static inline void calc_crc16(unsigned short *crc, unsigned short  crcbuf)

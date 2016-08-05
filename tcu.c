@@ -1131,11 +1131,11 @@ int gen_packet_tcu_PGN1792(struct charge_task * thiz, struct event_struct* param
 }
 
 int get_data_tcu_PGN1792(struct charge_task * thiz){
+	memset(&thiz->tcv_info, 0xFF, sizeof(struct pgn1792_TCV));
     thiz->tcv_info.spn_tcu_version[0] = 12;
     thiz->tcv_info.spn_tcu_version[1] = 10;
 	return 0;
 }
-
 
 // TCU下发参数
 int gen_packet_tcu_PGN2304(struct charge_task * thiz, struct event_struct* param)
@@ -1170,6 +1170,19 @@ int gen_packet_tcu_PGN2304(struct charge_task * thiz, struct event_struct* param
     return 0;
 }
 
+int get_data_tcu_PGN2304(struct charge_task * thiz){
+	memset(&thiz->tcp_info, 0xFF, sizeof(struct pgn2304_TCP));
+	thiz->tcp_info.spn2304_charger_sn[0] = 0x00;
+	thiz->tcp_info.spn2304_charger_sn[1] = 0x00;
+	thiz->tcp_info.spn2304_charger_sn[2] = 0x00;
+	thiz->tcp_info.spn2304_charger_sn[3] = 0x00;
+
+	thiz->tcp_info.spn2304_charger_region_code[0] = '1';
+	thiz->tcp_info.spn2304_charger_region_code[1] = '1';
+	thiz->tcp_info.spn2304_charger_region_code[2] = '1';
+	return 0;
+}
+
 // TCU启动充电
 int gen_packet_tcu_PGN256(struct charge_task * thiz, struct event_struct* param)
 {
@@ -1189,6 +1202,15 @@ int gen_packet_tcu_PGN256(struct charge_task * thiz, struct event_struct* param)
     return 0;
 }
 
+int get_data_tcu_PGN256(struct charge_task * thiz){
+	memset(&thiz->tcv_info, 0xFF, sizeof(struct pgn256_TRC));
+	thiz->trc_info.spn256_port = 1;
+	thiz->trc_info.spn256_load_control = 0;
+	return 0;
+}
+
+
+
 // TCU停止充电
 int gen_packet_tcu_PGN768(struct charge_task * thiz, struct event_struct* param)
 {
@@ -1206,6 +1228,13 @@ int gen_packet_tcu_PGN768(struct charge_task * thiz, struct event_struct* param)
     statistics[I_TST].can_counter ++;
 
     return 0;
+}
+
+int get_data_tcu_PGN768(struct charge_task * thiz){
+	memset(&thiz->tcv_info, 0xFF, sizeof(struct pgn768_TST));
+	thiz->tst_info.spn768_port = 1;
+	thiz->tst_info.spn768_status = 0x00;
+	return 0;
 }
 
 // TCU下发对时
@@ -1249,6 +1278,12 @@ int gen_packet_tcu_PGN1280(struct charge_task * thiz, struct event_struct* param
     return 0;
 }
 
+int get_data_tcu_PGN1280(struct charge_task * thiz){
+
+	return 0;
+}
+
+
 // TCU心跳帧
 int gen_packet_tcu_PGN12544(struct charge_task * thiz, struct event_struct* param)
 {
@@ -1273,6 +1308,20 @@ int gen_packet_tcu_PGN12544(struct charge_task * thiz, struct event_struct* para
     return 0;
 }
 
+int get_data_tcu_PGN12544(struct charge_task * thiz){
+
+	memset(&thiz->thb_info, 0xFF, sizeof(struct pgn12544_THB));
+	thiz->thb_info.spn12544_port = 1;
+	thiz->thb_info.spn12544_status = 0x00;
+	thiz->thb_info.spn12544_ele[0] = '0';
+	thiz->thb_info.spn12544_ele[1] = '2';
+	thiz->thb_info.spn12544_time[0] = '0';
+	thiz->thb_info.spn12544_time[1] = '2';
+
+	return 0;
+}
+
+
 // TCU启动完成应答帧
 int gen_packet_tcu_PGN4608(struct charge_task * thiz, struct event_struct* param)
 {
@@ -1293,6 +1342,21 @@ int gen_packet_tcu_PGN4608(struct charge_task * thiz, struct event_struct* param
 
     return 0;
 }
+
+
+
+
+
+int get_data_tcu_PGN4608(struct charge_task * thiz){
+
+	memset(&thiz->thb_info, 0xFF, sizeof(struct pgn4608_TRSF));
+	thiz->trsf_info.spn4608_port = 1;
+	thiz->trsf_info.spn4608_load_control = 0;
+	thiz->trsf_info.spn4608_status = 0x00;
+
+	return 0;
+}
+
 
 // TCU停止完成应答帧
 int gen_packet_tcu_PGN5120(struct charge_task * thiz, struct event_struct* param)
@@ -1315,6 +1379,17 @@ int gen_packet_tcu_PGN5120(struct charge_task * thiz, struct event_struct* param
     return 0;
 }
 
+
+int get_data_tcu_PGN5120(struct charge_task * thiz){
+
+	memset(&thiz->thb_info, 0xFF, sizeof(struct pgn5120_TRST));
+	thiz->trst_info.spn5120_port = 1;
+	thiz->trst_info.spn5120_Stop_reason = 0;
+	thiz->trst_info.spn5120_status = 0x00;
+
+	return 0;
+}
+
 // TCU连接确认应答帧
 int gen_packet_tcu_PGN5632(struct charge_task * thiz, struct event_struct* param)
 {
@@ -1335,5 +1410,28 @@ int gen_packet_tcu_PGN5632(struct charge_task * thiz, struct event_struct* param
     return 0;
 }
 
+int get_data_tcu_PGN5632(struct charge_task * thiz){
+	memset(&thiz->trct_info, 0xFF, sizeof(struct pgn5632_TRCT));
+	thiz->trct_info.spn5632_port = 1;
+	thiz->trct_info.spn5632_status = 0x00;
+	return 0;
+}
 
+int recv_data_tcu_PGN512(struct charge_task * thiz,struct event_struct* param){
+
+	memcpy(&thiz->crrc_info, param->buff.rx_buff, sizeof(struct pgn512_CRRC));
+	return 0;
+}
+int recv_data_tcu_PGN1024(struct charge_task * thiz,struct event_struct* param){
+
+	return 0;
+}
+int recv_data_tcu_PGN1536(struct charge_task * thiz,struct event_struct* param){return 0;}
+int recv_data_tcu_PGN2048(struct charge_task * thiz,struct event_struct* param){return 0;}
+int recv_data_tcu_PGN2560(struct charge_task * thiz,struct event_struct* param){return 0;}
+int recv_data_tcu_PGN4352(struct charge_task * thiz,struct event_struct* param){return 0;}
+int recv_data_tcu_PGN4864(struct charge_task * thiz,struct event_struct* param){return 0;}
+int recv_data_tcu_PGN5376(struct charge_task * thiz,struct event_struct* param){return 0;}
+int recv_data_tcu_PGN8448(struct charge_task * thiz,struct event_struct* param){return 0;}
+int recv_data_tcu_PGN8704(struct charge_task * thiz,struct event_struct* param){return 0;}
 
