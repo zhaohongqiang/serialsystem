@@ -44,7 +44,7 @@ struct can_pack_generator generator[] = {
 	.pgn        =  0x000500,
 	.prioriy    =  6,
 	.datalen    =  8,
-	.period     =  510,
+	.period     =  502,
 	.heartbeat   =  0,
 	.mnemonic   =  "TTS"
 	},
@@ -98,7 +98,7 @@ struct can_pack_generator generator[] = {
     .pgn        =  0x003100,
     .prioriy    =  6,
     .datalen    =  8,
-    .period     =  1010,
+    .period     =  1002,
     .heartbeat   =  0,
     .mnemonic   =  "THB"
     }
@@ -578,13 +578,14 @@ int about_packet_reciev_done(struct charge_task *thiz,
         statistics[I_TCV].can_silence = 0;
         statistics[I_CRCV].can_counter ++;
         statistics[I_CRCV].can_silence = 0;
-        log_printf(INF, "TCU: TCU  now  "GRN("PGN_CRCV"));
+        log_printf(INF, "TCU: TCU  now  "GRN("PGN_CRCV  0x000800   PGN_2048  Charging应答版本校验"));
 
         if ( thiz->tcu_stage == TCU_STAGE_CHECKVER) {
 			thiz->tcu_stage = TCU_STAGE_PARAMETER;
 			thiz->tcu_tmp_stage = TCU_STAGE_PARAMETER;
 			log_printf(INF, "TCU: TCU change stage to "RED("TCU_STAGE_PARAMETER"));
 			recv_data_tcu_PGN2048(thiz,param);
+			analysis_data_tcu_PGN2048(thiz);
 		}
         break;
     case PGN_CRCP:
@@ -592,17 +593,24 @@ int about_packet_reciev_done(struct charge_task *thiz,
 		statistics[I_TCP].can_silence = 0;
     	statistics[I_CRCP].can_counter ++;
 		statistics[I_CRCP].can_silence = 0;
-		log_printf(INF, "TCU: TCU  now  "GRN("PGN_CRCP"));
+		log_printf(INF, "TCU: TCU  now  "GRN("PGN_CRCP  0x000A00   PGN_2560  Charging 应答充电参数"));
 		 if ( thiz->tcu_stage == TCU_STAGE_PARAMETER) {
 			//thiz->charge_stage = TCU_STAGE_CONNECT;
 			 recv_data_tcu_PGN2560(thiz,param);
+			 analysis_data_tcu_PGN2560(thiz);
 			log_printf(INF, "TCU: TCU now stage to "RED("TCU_STAGE_PARAMETER"));
 		}
+//		 if( thiz->tcu_cct_stage == TCU_STAGE_CONNECT){
+//			 thiz->tcu_stage = TCU_STAGE_CONNECT;
+//			 thiz->tcu_tmp_stage = TCU_STAGE_CONNECT;
+//			 log_printf(INF, "TCU:  Charging连接确认 connect TCU change stage to "RED("TCU_STAGE_CONNECT"));
+//		 }
     	break;
     case PGN_CCT:
     	statistics[I_CCT].can_counter ++;
 		statistics[I_CCT].can_silence = 0;
-		log_printf(INF, "TCU: TCU  now  "GRN("PGN_CCT"));
+		log_printf(INF, "TCU: TCU  now  "GRN("PGN_CCT  0x001500    PGN_5376  Charging连接确认 connect"));
+		//thiz->tcu_cct_stage = TCU_STAGE_CONNECT;
 		 if ( thiz->tcu_stage == TCU_STAGE_PARAMETER) {
 			thiz->tcu_stage = TCU_STAGE_CONNECT;
 			thiz->tcu_tmp_stage = TCU_STAGE_CONNECT;
@@ -615,7 +623,7 @@ int about_packet_reciev_done(struct charge_task *thiz,
 		statistics[I_TRC].can_silence = 0;
     	statistics[I_CRTR].can_counter ++;
 		statistics[I_CRTR].can_silence = 0;
-		log_printf(INF, "TCU: TCU  now  "GRN("PGN_CRTR"));
+		log_printf(INF, "TCU: TCU  now  "GRN("PGN_CRTR    0x000200  PGN_512   Charging应答TCU启动"));
 		 if ( thiz->tcu_stage == TCU_STAGE_START) {
 			//thiz->charge_stage = TCU_STAGE_STATUS;
 			 recv_data_tcu_PGN512(thiz,param);
@@ -625,7 +633,7 @@ int about_packet_reciev_done(struct charge_task *thiz,
     case PGN_CSF:
     	statistics[I_CSF].can_counter ++;
 		statistics[I_CSF].can_silence = 0;
-		log_printf(INF, "TCU: TCU  now  "GRN("PGN_CSF"));
+		log_printf(INF, "TCU: TCU  now  "GRN("PGN_CSF  0x001100 PGN_4352   Charging启动完成  start finish"));
 		 if ( thiz->tcu_stage == TCU_STAGE_START) {
 			thiz->tcu_stage = TCU_STAGE_STATUS;
 			thiz->tcu_tmp_stage = TCU_STAGE_STATUS;
@@ -638,7 +646,7 @@ int about_packet_reciev_done(struct charge_task *thiz,
 		statistics[I_TST].can_silence = 0;
     	statistics[I_CRST].can_counter ++;
 		statistics[I_CRST].can_silence = 0;
-		log_printf(INF, "TCU: TCU  now  "GRN("PGN_CRST"));
+		log_printf(INF, "TCU: TCU  now  "GRN("PGN_CRST 0x000400   PGN_1024   Charging应答TCU停止充电"));
 		 if ( thiz->tcu_stage == TCU_STAGE_STOP) {
 			//thiz->charge_stage = TCU_STAGE_STOP_STATUS;
 			 recv_data_tcu_PGN1024(thiz,param);
@@ -648,7 +656,7 @@ int about_packet_reciev_done(struct charge_task *thiz,
     case PGN_CST:
     	statistics[I_CST].can_counter ++;
 		statistics[I_CST].can_silence = 0;
-		log_printf(INF, "TCU: TCU  now  "GRN("PGN_CST"));
+		log_printf(INF, "TCU: TCU  now  "GRN("PGN_CST  0x001300  PGN_4864  Charging停止充电完成  stop"));
 		 if ( thiz->tcu_stage == TCU_STAGE_STOP) {
 			thiz->tcu_stage = TCU_STAGE_STOP_STATUS;
 			thiz->tcu_tmp_stage = TCU_STAGE_STOP_STATUS;
@@ -659,17 +667,19 @@ int about_packet_reciev_done(struct charge_task *thiz,
     case 	PGN_CRTS:
     	statistics[I_CRTS].can_counter ++;
 		statistics[I_CRTS].can_silence = 0;
-		//log_printf(INF, "TCU: TCU  now  "GRN("PGN_CRTS"));
+		log_printf(INF, "TCU: TCU  now  "GRN("PGN_CRTS 0x000600 PGN_1536  Charging对时应答"));
 		recv_data_tcu_PGN1536(thiz,param);
     	break;
     case PGN_CRF:
     	statistics[I_CRF].can_counter ++;
 		statistics[I_CRF].can_silence = 0;
+		log_printf(INF, "TCU: TCU  now  "GRN("PGN_CRF 0x002100 PGN_8448  Charging遥信帧 remote frame"));
 		recv_data_tcu_PGN8448(thiz,param);
     	break;
     case PGN_CTF:
     	statistics[I_CTF].can_counter ++;
 		statistics[I_CTF].can_silence = 0;
+		log_printf(INF, "TCU: TCU  now  "GRN("PGN_CTF 0x002200  PGN_8704  Charging遥测帧  telemetry frame"));
 		recv_data_tcu_PGN8704(thiz,param);
     	break;
     default:
@@ -698,8 +708,8 @@ int about_packet_transfer_done(struct charge_task *thiz,
     		thiz->tcu_stage = thiz->tcu_tmp_stage;
     		break;
     	case PGN_TRCT:
-    		log_printf(INF, "TCU: TCU  now  "GRN("PGN_TRCT"));
-    		 if ( thiz->tcu_stage == TCU_STAGE_CONNECT) {
+    		log_printf(INF, "TCU: TCU  now  "GRN("PGN_TRCT  0x001600  PGN_5632   TCU应答连接确认"));
+    		 if ( thiz->tcu_stage == TCU_STAGE_CONNECT ) {
 				thiz->tcu_stage = TCU_STAGE_START;
 				thiz->tcu_tmp_stage = TCU_STAGE_START;
 				log_printf(INF, "TCU: TCU change stage to "RED("TCU_STAGE_START"));
@@ -709,7 +719,7 @@ int about_packet_transfer_done(struct charge_task *thiz,
 			}
     		break;
     	case PGN_TRSF:
-    		log_printf(INF, "TCU: TCU  now  "GRN("PGN_TRSF"));
+    		log_printf(INF, "TCU: TCU  now  "GRN("PGN_TRSF  0x001200   PGN_4608  TCU应答启动完成"));
     		if ( thiz->tcu_stage == TCU_STAGE_STATUS) {
 				thiz->tcu_stage = TCU_STAGE_STOP;
 				thiz->tcu_tmp_stage = TCU_STAGE_STOP;
@@ -1450,6 +1460,7 @@ int recv_data_tcu_PGN2048(struct charge_task * thiz,struct event_struct* param){
 	printf("thiz->crcv_info==%d %d\n",thiz->crcv_info.spn_charging_version[0],thiz->crcv_info.spn_charging_version[1]);
 	return 0;
 }
+
 int recv_data_tcu_PGN2560(struct charge_task * thiz,struct event_struct* param){
 	memcpy(&thiz->crcp_info, param->buff.rx_buff, sizeof(struct pgn2560_CRCP));
 	return 0;
@@ -1476,3 +1487,95 @@ int recv_data_tcu_PGN8704(struct charge_task * thiz,struct event_struct* param){
 	return 0;
 }
 
+
+int analysis_data_tcu_PGN512(struct charge_task * thiz){
+	if(0 == thiz->crrc_info.spn512_status){
+		log_printf(INF, "TCU: TCU  "GRN("启动充电成功"));
+	}else{
+		log_printf(INF, "TCU: TCU  "GRN("启动充电失败"));
+	}
+	return 0;
+}
+int analysis_data_tcu_PGN1024(struct charge_task * thiz){
+	if(0 == thiz->crst_info.spn1024_status){
+		log_printf(INF, "TCU: TCU  "GRN("停止充电命令确认成功"));
+	}else{
+		log_printf(INF, "TCU: TCU  "GRN("停止充电命令确认失败"));
+	}
+	return 0;
+}
+int analysis_data_tcu_PGN1536(struct charge_task * thiz){
+	if(0 == thiz->crts_info.spn1536_confirm){
+		log_printf(INF, "TCU: TCU  "GRN("对时确认"));
+		if(0 == thiz->crts_info.spn1536_Immediately){
+			log_printf(INF, "TCU: TCU  "GRN("对时立即进行"));
+		}else{
+			log_printf(INF, "TCU: TCU  "GRN("charging自行选择时间进行更新"));
+		}
+	}else{
+		log_printf(INF, "TCU: TCU  "GRN("对时拒绝"));
+	}
+
+
+	return 0;
+}
+int analysis_data_tcu_PGN2048(struct charge_task * thiz){
+	if(0 == strcmp(thiz->tcv_info.spn_tcu_version,thiz->crcv_info.spn_charging_version)){
+		log_printf(INF, "TCU: TCU  "GRN("版本校验成功"));
+	}else{
+		log_printf(INF, "TCU: TCU  "GRN("版本校验失败"));
+		 thiz->tcu_stage = TCU_STAGE_CHECKVER;
+		 thiz->tcu_tmp_stage = TCU_STAGE_CHECKVER;
+	}
+	//else if(thiz->tcv_info.spn_tcu_version[0] != thiz->crcv_info.spn_charging_version[0])
+	return 0;
+}
+int analysis_data_tcu_PGN2560(struct charge_task * thiz){
+	if(0 == thiz->crcp_info.spn2560_charger_status){
+		log_printf(INF, "TCU: TCU  "GRN("充电参数正确"));
+	}else{
+		log_printf(INF, "TCU: TCU  "GRN("充电参数不匹配"));
+	}
+
+	return 0;
+}
+int analysis_data_tcu_PGN4352(struct charge_task * thiz){
+	if(0 == thiz->csf_info.spn4352_status){
+		log_printf(INF, "TCU: TCU  "GRN("启动充电成功"));
+	}else{
+		log_printf(INF, "TCU: TCU  "GRN("启动充电失败"));
+	}
+
+	return 0;
+}
+int analysis_data_tcu_PGN4864(struct charge_task * thiz){
+	if(0 == thiz->cst_info.spn4864_status){
+		log_printf(INF, "TCU: TCU  "GRN("停止充电成功"));
+	}else{
+		log_printf(INF, "TCU: TCU  "GRN("停止充电失败"));
+	}
+	return 0;
+}
+int analysis_data_tcu_PGN5376(struct charge_task * thiz){
+
+	return 0;
+}
+int analysis_data_tcu_PGN8448(struct charge_task * thiz){
+
+	return 0;
+}
+int analysis_data_tcu_PGN8704(struct charge_task * thiz){
+
+	return 0;
+}
+
+//struct pgn512_CRRC crrc_info;//应答启动充电
+//struct pgn1024_CRST crst_info;//应答停止充电
+//struct pgn1536_CRTS  crts_info;//应答对时
+//struct pgn2048_CRCV crcv_info;//充电机版本确认
+//struct pgn2560_CRCP crcp_info;//应答参数
+//struct pgn4352_CSF csf_info;//Charging启动完成状态信息
+//struct pgn4864_CST cst_info;//Charging停止充电完成状态信息
+//struct pgn5376_CCT cct_info;//Charging连接确认
+//struct pgn8448_CRF crf_info;//Charging遥信帧
+//struct pgn8704_CTF ctf_info;//Charging遥测帧

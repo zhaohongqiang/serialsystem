@@ -23,7 +23,6 @@ extern void * thread_tcu_read_service(void *) ___THREAD_ENTRY___;
 //extern void * thread_tcu_heartbeat_service(void *)___THREAD_ENTRY___;
 int main()
 {
-    const char *user_cfg = NULL;
     pthread_t tid = 0;
     pthread_attr_t attr;
     int s;
@@ -42,25 +41,7 @@ int main()
     printf( "                            %s %s\n\n", __DATE__, __TIME__);
     printf("系统启动中.....\n\n\n\n");
 
-    // 读取配置文件的顺序必须是
-    // 1. 系统配置文件
-    // 2. 用户参数配置文件
-    // 需要注意的是，用户配置数据和用户配置数据可以有相同的配置项
-    // 但优先级最高的是用户配置数据，如果某个配置项同时出现在系统配置
-    // 和用户配置中，那么系统最终采用的值将是用户配置数据中的值
-    // 因此这里需要注意的是：
-    // * 有两个配置文件是一种冗余设计
-    // * 非必要的情况下，分别将系统配置和用户配置分开存储到两个文件中
-#if 0
-    config_initlize("ontom.cfg");
-    user_cfg = config_read("user_config_file");
-    if ( user_cfg == NULL ) {
-        log_printf(WRN, "not gave user config file,"
-                   "use 'user.cfg' by default.");
-        user_cfg = "user.cfg";
-    }
-    config_initlize(user_cfg);
-#endif
+
     s = pthread_attr_init(&attr);
     if ( 0 != s ) {
         log_printf(WRN, "could not set thread stack size, use default.");

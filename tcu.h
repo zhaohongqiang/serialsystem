@@ -434,6 +434,7 @@ struct charge_task {
     TCU_STAGE tcu_tmp_stage;
     TCU_STAGE tcu_heartbeat_stage;
     TCU_STAGE tcu_time_stage;
+    TCU_STAGE tcu_cct_stage;
 
     // CAN TCU 通信所处状态
     CAN_TCU_STATUS can_tcu_status;
@@ -532,6 +533,17 @@ int recv_data_tcu_PGN5376(struct charge_task * thiz,struct event_struct* param);
 int recv_data_tcu_PGN8448(struct charge_task * thiz,struct event_struct* param);
 int recv_data_tcu_PGN8704(struct charge_task * thiz,struct event_struct* param);
 
+
+int analysis_data_tcu_PGN512(struct charge_task * thiz);
+int analysis_data_tcu_PGN1024(struct charge_task * thiz);
+int analysis_data_tcu_PGN1536(struct charge_task * thiz);
+int analysis_data_tcu_PGN2048(struct charge_task * thiz);
+int analysis_data_tcu_PGN2560(struct charge_task * thiz);
+int analysis_data_tcu_PGN4352(struct charge_task * thiz);
+int analysis_data_tcu_PGN4864(struct charge_task * thiz);
+int analysis_data_tcu_PGN5376(struct charge_task * thiz);
+int analysis_data_tcu_PGN8448(struct charge_task * thiz);
+int analysis_data_tcu_PGN8704(struct charge_task * thiz);
 
 //1字节crc16计算
 static inline void calc_crc16(unsigned short *crc, unsigned short  crcbuf)
