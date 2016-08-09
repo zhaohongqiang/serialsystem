@@ -20,6 +20,7 @@
 
 extern void * thread_tcu_write_service(void *) ___THREAD_ENTRY___;
 extern void * thread_tcu_read_service(void *) ___THREAD_ENTRY___;
+extern void * thread_tcu_control(void *) ___THREAD_ENTRY___;
 //extern void * thread_tcu_heartbeat_service(void *)___THREAD_ENTRY___;
 int main()
 {
@@ -95,6 +96,20 @@ int main()
     }
     log_printf(INF, "CAN-BUS heartbeatt start up.                           DONE.");
 #endif
+
+#if 1
+    //
+    ret = pthread_create( & tid, &attr, thread_tcu_control,
+                          &thread_done[3]);
+    if ( 0 != ret ) {
+        errcode  = 0x1002;
+        log_printf(ERR,
+                   "CAN-BUS writer start up.                       FAILE!!!!");
+        goto die;
+    }
+    log_printf(INF, "CAN-BUS thread_tcu_control start up.                           DONE.");
+#endif
+
      if ( s == 0 ) {
         pthread_attr_destroy(&attr);
     }
