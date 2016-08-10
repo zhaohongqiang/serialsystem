@@ -1279,31 +1279,55 @@ int gen_packet_tcu_PGN1280(struct charge_task * thiz, struct event_struct* param
     struct can_pack_generator *gen = &generator[TCU_TTS];
     time_t timep;
     struct tm *p;
+    int mm;
 
-    time(&timep);
-    p =localtime(&timep);
-    if ( p == NULL ) {
-        param->evt_param = EVT_RET_ERR;
-        return 0;
-    }
-   // printf("Local time is: %s\n",asctime(p));
-    //printf("%4d年%02d月%02d日 %02d:%02d:%02d\n",p->tm_year+1900,p->tm_mon+1,p->tm_mday,p->tm_hour,p->tm_min,p->tm_sec);
+//    time(&timep);
+//    p =localtime(&timep);
+//    if ( p == NULL ) {
+//        param->evt_param = EVT_RET_ERR;
+//        return 0;
+//    }
+//    printf("Local time is: %s\n",asctime(p));
+//    printf("%4d年%02d月%02d日 %02d:%02d:%02d\n",p->tm_year+1900,p->tm_mon+1,p->tm_mday,p->tm_hour,p->tm_min,p->tm_sec);
+
+    struct timeval    tv;
+	//struct timezone tz;
+	//gettimeofday(&tv, &tz);
+	gettimeofday(&tv, NULL);
+	printf("tv_sec:%ld\n",tv.tv_sec);
+	printf("tv_usec:%ld tv_msec:%ld\n",tv.tv_usec,tv.tv_usec/1000);
+	//printf("tz_minuteswest:%d\n",tz.tz_minuteswest);
+	//printf("tz_dsttime:%d\n",tz.tz_dsttime);
+
+	p = localtime(&tv.tv_sec);
+	printf("time_now:%4d年%02d月%02d日 %02d:%02d:%02d.%ld\n", 1900+p->tm_year, 1+p->tm_mon, p->tm_mday, p->tm_hour, p->tm_min, p->tm_sec, tv.tv_usec);
+
 	memset(&thiz->tts_info, 0xFF, sizeof(struct pgn1280_TTS));
     thiz->tts_info.spn1280_Immediately = 0;
-    thiz->tts_info.spn1280_bcd_sec = (((p->tm_sec / 10 ) & 0x0F ) << 4) |
-               ((p->tm_sec % 10) & 0x0F);
-    thiz->tts_info.spn1280_bcd_min = (((p->tm_min / 10 ) & 0x0F ) << 4) |
-               ((p->tm_min % 10) & 0x0F);
-    thiz->tts_info.spn1280_bcd_hour = (((p->tm_hour / 10 ) & 0x0F ) << 4) |
-               ((p->tm_hour % 10) & 0x0F);
-    thiz->tts_info.spn1280_bcd_day = (((p->tm_mday / 10 ) & 0x0F ) << 4) |
-               ((p->tm_mday % 10) & 0x0F);
-    thiz->tts_info.spn1280_bcd_mon = (((p->tm_mon / 10 ) & 0x0F ) << 4) |
-               ((p->tm_mon % 10) & 0x0F);
-    thiz->tts_info.spn1280_bcd_year_h = (((p->tm_year / 100 ) & 0x0F ) << 4) |
-               ((p->tm_year % 100) & 0x0F);
-    thiz->tts_info.spn1280_bcd_year_l = (((p->tm_year / 10 ) & 0x0F ) << 4) |
-               ((p->tm_year % 10) & 0x0F);
+    mm = p->tm_sec*1000 + tv.tv_usec/1000;
+    printf("mm===%d\n",mm);
+	thiz->tts_info.spn1280_bcd_sec_l = mm&0xff;
+	thiz->tts_info.spn1280_bcd_sec_h = (mm&0xff00)>>8;
+	thiz->tts_info.spn1280_bcd_min = p->tm_min & 0xff;
+	thiz->tts_info.spn1280_bcd_hour = p->tm_hour & 0xff;
+	thiz->tts_info.spn1280_bcd_day = p->tm_mday & 0xff;
+	thiz->tts_info.spn1280_bcd_mon = (p->tm_mon+1) & 0x0f ;
+	thiz->tts_info.spn1280_bcd_year = (p->tm_year-100) & 0xff;
+
+//    thiz->tts_info.spn1280_bcd_sec = (((p->tm_sec / 10 ) & 0x0F ) << 4) |
+//               ((p->tm_sec % 10) & 0x0F);
+//    thiz->tts_info.spn1280_bcd_min = (((p->tm_min / 10 ) & 0x0F ) << 4) |
+//               ((p->tm_min % 10) & 0x0F);
+//    thiz->tts_info.spn1280_bcd_hour = (((p->tm_hour / 10 ) & 0x0F ) << 4) |
+//               ((p->tm_hour % 10) & 0x0F);
+//    thiz->tts_info.spn1280_bcd_day = (((p->tm_mday / 10 ) & 0x0F ) << 4) |
+//               ((p->tm_mday % 10) & 0x0F);
+//    thiz->tts_info.spn1280_bcd_mon = (((p->tm_mon / 10 ) & 0x0F ) << 4) |
+//               ((p->tm_mon % 10) & 0x0F);
+//    thiz->tts_info.spn1280_bcd_year_h = (((p->tm_year / 100 ) & 0x0F ) << 4) |
+//               ((p->tm_year % 100) & 0x0F);
+//    thiz->tts_info.spn1280_bcd_year_l = (((p->tm_year / 10 ) & 0x0F ) << 4) |
+//               ((p->tm_year % 10) & 0x0F);
 
 	memset(param->buff.tx_buff, 0xFF, sizeof(struct pgn1280_TTS));
 	memcpy(param->buff.tx_buff, &thiz->tts_info, sizeof(struct pgn1280_TTS));

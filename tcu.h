@@ -122,13 +122,13 @@ struct pgn1024_CRST{//应答停止充电
 struct pgn1280_TTS{//下发对时
 		u8 spn1280_Immediately;//0立即执行　１自行选择时间更新
 		// 压缩的BCD码
-	    u8 spn1280_bcd_sec;
+		u8 spn1280_bcd_sec_l;
+	    u8 spn1280_bcd_sec_h;
 	    u8 spn1280_bcd_min;
 	    u8 spn1280_bcd_hour;
 	    u8 spn1280_bcd_day;
 	    u8 spn1280_bcd_mon;
-	    u8 spn1280_bcd_year_h;
-	    u8 spn1280_bcd_year_l;
+	    u8 spn1280_bcd_year;
 };
 
 struct pgn1536_CRTS{//应答对时
