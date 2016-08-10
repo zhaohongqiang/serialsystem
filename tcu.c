@@ -321,28 +321,36 @@ void Hachiko_packet_heart_beart_notify_proc(Hachiko_EVT evt, void *private,
                 case TCU_STAGE_CHECKVER:
                    // if (me->can_pgn != PGN_CRCV) break;
 					log_printf(WRN, "TCU: check_version "RED("timeout"));
-					task->tcu_stage = TCU_STAGE_CHECKVER;
-					task->tcu_tmp_stage = TCU_STAGE_CHECKVER;
+					//task->tcu_stage = TCU_STAGE_CHECKVER;
+					//task->tcu_tmp_stage = TCU_STAGE_CHECKVER;
 					task->tcu_stage = TCU_STAGE_ANY;
 					task->tcu_tmp_stage = TCU_STAGE_ANY;
                     break;
                 case TCU_STAGE_PARAMETER:
                    // if (me->can_pgn != PGN_CRCP) break;
 					log_printf(WRN, "TCU: change parameter "RED("timeout"));
-					task->tcu_stage = TCU_STAGE_PARAMETER;
-					task->tcu_tmp_stage = TCU_STAGE_PARAMETER;
+					//task->tcu_stage = TCU_STAGE_PARAMETER;
+					//task->tcu_tmp_stage = TCU_STAGE_PARAMETER;
+					task->tcu_stage = TCU_STAGE_ANY;
+					task->tcu_tmp_stage = TCU_STAGE_ANY;
                     break;
                 case TCU_STAGE_START:
                    // if (me->can_pgn != PGN_CRTR) break;
 					log_printf(WRN, "TCU: start charging "RED("timeout"));
-					task->tcu_stage = TCU_STAGE_START;
+					//task->tcu_stage = TCU_STAGE_START;
+					task->tcu_stage = TCU_STAGE_ANY;
+					task->tcu_tmp_stage = TCU_STAGE_ANY;
                     break;
                 case TCU_STAGE_STOP:
                     //if (me->can_pgn != PGN_CRST) break;
 					log_printf(WRN, "TCU: stop charging "RED("timeout"));
-					task->tcu_stage = TCU_STAGE_STOP;
+					//task->tcu_stage = TCU_STAGE_STOP;
+					task->tcu_stage = TCU_STAGE_ANY;
+					task->tcu_tmp_stage = TCU_STAGE_ANY;
 					break;
                 default:
+					task->tcu_stage = TCU_STAGE_ANY;
+					task->tcu_tmp_stage = TCU_STAGE_ANY;
                     break;
                 }
             }
@@ -1294,8 +1302,7 @@ int gen_packet_tcu_PGN1280(struct charge_task * thiz, struct event_struct* param
 	//struct timezone tz;
 	//gettimeofday(&tv, &tz);
 	gettimeofday(&tv, NULL);
-	printf("tv_sec:%ld\n",tv.tv_sec);
-	printf("tv_usec:%ld tv_msec:%ld\n",tv.tv_usec,tv.tv_usec/1000);
+	//printf("tv_sec:%ld tv_usec:%ld tv_msec:%ld\n",tv.tv_sec,tv.tv_usec,tv.tv_usec/1000);
 	//printf("tz_minuteswest:%d\n",tz.tz_minuteswest);
 	//printf("tz_dsttime:%d\n",tz.tz_dsttime);
 
@@ -1305,7 +1312,7 @@ int gen_packet_tcu_PGN1280(struct charge_task * thiz, struct event_struct* param
 	memset(&thiz->tts_info, 0xFF, sizeof(struct pgn1280_TTS));
     thiz->tts_info.spn1280_Immediately = 0;
     mm = p->tm_sec*1000 + tv.tv_usec/1000;
-    printf("mm===%d\n",mm);
+    //printf("mm===%d\n",mm);
 	thiz->tts_info.spn1280_bcd_sec_l = mm&0xff;
 	thiz->tts_info.spn1280_bcd_sec_h = (mm&0xff00)>>8;
 	thiz->tts_info.spn1280_bcd_min = p->tm_min & 0xff;
