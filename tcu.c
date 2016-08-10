@@ -258,7 +258,7 @@ void Hachiko_packet_heart_beart_notify_proc(Hachiko_EVT evt, void *private,
         for ( i = 0;
               (unsigned int)i < sizeof(generator) / sizeof(struct can_pack_generator); i++ ) {
             thiz = &generator[i];
-            if ( thiz->stage == task->tcu_stage ) {
+            if ( thiz->stage == task->tcu_stage && task->tcu_wait_stage ==TCU_STAGE_INVALID ) {
                 if ( thiz->heartbeat < thiz->period ) {
                    // thiz->heartbeat += 10;
                     thiz->heartbeat += 1;
@@ -293,27 +293,29 @@ void Hachiko_packet_heart_beart_notify_proc(Hachiko_EVT evt, void *private,
          *
          * BEM和CEM不在超时统计范围内
          */
-#if 0
+#if 1
         for ( i = 0;
               (unsigned int)i < (sizeof(statistics) / sizeof(struct tcu_statistics) ) - 2; i++ ) {
             me = &statistics[i];
             if ( generator[i].stage == task->tcu_stage ){
             	me->can_silence += 1;
             }else if( generator[i].stage == 0x08 ){
-            	me->can_silence += 1;
+            	me->can_silence += 1;//屏蔽心跳超时
+            	//me->can_silence = 0;
             } else if( generator[i].stage == 0x09 ){
-            	me->can_silence += 1;
+            	me->can_silence += 1;//屏蔽对时超时
+            	//me->can_silence = 0;
             }else{
             	me->can_silence = 0;
             }
             if ( me->can_tolerate_silence < me->can_silence ) {
                 switch (task->tcu_stage) {
                 case TCU_STAGE_HEAT:
-					log_printf(WRN, "TCU: heart_beat  "RED("timeout"));
+					//log_printf(WRN, "TCU: heart_beat  "RED("timeout"));
 					//task->tcu_stage = TCU_STAGE_HEAT;
                 	break;
                 case TCU_STAGE_TIME:
-					log_printf(WRN, "TCU: time  "RED("timeout"));
+					//log_printf(WRN, "TCU: time  "RED("timeout"));
 					//task->tcu_stage = TCU_STAGE_TIME;
                 	break;
                 case TCU_STAGE_CHECKVER:
@@ -321,6 +323,8 @@ void Hachiko_packet_heart_beart_notify_proc(Hachiko_EVT evt, void *private,
 					log_printf(WRN, "TCU: check_version "RED("timeout"));
 					task->tcu_stage = TCU_STAGE_CHECKVER;
 					task->tcu_tmp_stage = TCU_STAGE_CHECKVER;
+					task->tcu_stage = TCU_STAGE_ANY;
+					task->tcu_tmp_stage = TCU_STAGE_ANY;
                     break;
                 case TCU_STAGE_PARAMETER:
                    // if (me->can_pgn != PGN_CRCP) break;
@@ -380,6 +384,7 @@ static int can_packet_callback(
         log_printf(INF, "TCU: CHARGER change stage to "RED("TCU_STAGE_CHECKVER"));
         thiz->tcu_stage = TCU_STAGE_CHECKVER;
         thiz->tcu_tmp_stage = TCU_STAGE_CHECKVER;
+        thiz->tcu_wait_stage = TCU_STAGE_INVALID;
         break;
     case EVENT_CAN_RESET:
         // 事件循环函数复位
@@ -599,6 +604,7 @@ int about_packet_reciev_done(struct charge_task *thiz,
 			 recv_data_tcu_PGN2560(thiz,param);
 			 //analysis_data_tcu_PGN2560(thiz);
 			log_printf(INF, "TCU: TCU now stage to "RED("TCU_STAGE_PARAMETER"));
+			thiz->tcu_wait_stage =TCU_STAGE_ANY;
 		}
 //		 if( thiz->tcu_cct_stage == TCU_STAGE_CONNECT){
 //			 thiz->tcu_stage = TCU_STAGE_CONNECT;
@@ -663,8 +669,8 @@ int about_packet_reciev_done(struct charge_task *thiz,
 			thiz->tcu_tmp_stage = TCU_STAGE_STOP_STATUS;
 			recv_data_tcu_PGN4864(thiz,param);
 			log_printf(INF, "TCU: TCU change stage to "RED("TCU_STAGE_STOP_STATUS 停止心跳  停止对时"));
-			thiz->tcu_heartbeat_stage  = TCU_STAGE_ANY;//停止心跳
-			thiz->tcu_time_stage  = TCU_STAGE_ANY;//停止对时
+			//thiz->tcu_heartbeat_stage  = TCU_STAGE_ANY;//停止心跳
+			//thiz->tcu_time_stage  = TCU_STAGE_ANY;//停止对时
 		}
     	break;
     case 	PGN_CRTS:
@@ -734,6 +740,9 @@ int about_packet_transfer_done(struct charge_task *thiz,
     		//thiz->tcu_tmp_stage = thiz->tcu_stage;
     		//thiz->tcu_heartbeat_stage = TCU_STAGE_ANY;
     		thiz->tcu_stage = thiz->tcu_tmp_stage;
+    		break;
+    	case PGN_TRST:
+			thiz->tcu_wait_stage = TCU_STAGE_ANY;
     		break;
     	default:
     		break;
@@ -1218,9 +1227,9 @@ int gen_packet_tcu_PGN256(struct charge_task * thiz, struct event_struct* param)
     memset(param->buff.tx_buff, 0xFF, sizeof(struct pgn256_TRC));
 	memset(&thiz->tcv_info, 0xFF, sizeof(struct pgn256_TRC));
     param->buff.tx_buff[0] = 0;
-    param->buff.tx_buff[1] = 0;
+    param->buff.tx_buff[1] = 2;
     thiz->trc_info.spn256_port = 0;
-    thiz->trc_info.spn256_load_control = 0;
+    thiz->trc_info.spn256_load_control = 2;
     param->buff_payload = gen->datalen;
     param->can_id = gen->prioriy << 26 | gen->pgn << 8 | CAN_TX_ID_MASK | CAN_EFF_FLAG;
     param->evt_param = EVT_RET_OK;
@@ -1232,7 +1241,7 @@ int gen_packet_tcu_PGN256(struct charge_task * thiz, struct event_struct* param)
 int get_data_tcu_PGN256(struct charge_task * thiz){
 	memset(&thiz->tcv_info, 0xFF, sizeof(struct pgn256_TRC));
 	thiz->trc_info.spn256_port = 0;
-	thiz->trc_info.spn256_load_control = 0;
+	thiz->trc_info.spn256_load_control = 2;
 	return 0;
 }
 
@@ -1246,9 +1255,9 @@ int gen_packet_tcu_PGN768(struct charge_task * thiz, struct event_struct* param)
     memset(param->buff.tx_buff, 0xFF, sizeof(struct pgn768_TST));
 	memset(&thiz->tcv_info, 0xFF, sizeof(struct pgn768_TST));
     param->buff.tx_buff[0] = 0;
-    param->buff.tx_buff[1] = 0x00;
+    param->buff.tx_buff[1] = 0x02;
     thiz->tst_info.spn768_port = 0;
-    thiz->tst_info.spn768_status = 0x00;
+    thiz->tst_info.spn768_status = 0x02;
     param->buff_payload = gen->datalen;
     param->can_id = gen->prioriy << 26 | gen->pgn << 8 | CAN_TX_ID_MASK | CAN_EFF_FLAG;
     param->evt_param = EVT_RET_OK;
@@ -1260,7 +1269,7 @@ int gen_packet_tcu_PGN768(struct charge_task * thiz, struct event_struct* param)
 int get_data_tcu_PGN768(struct charge_task * thiz){
 	memset(&thiz->tcv_info, 0xFF, sizeof(struct pgn768_TST));
 	thiz->tst_info.spn768_port = 0;
-	thiz->tst_info.spn768_status = 0x00;
+	thiz->tst_info.spn768_status = 0x02;
 	return 0;
 }
 
@@ -1579,11 +1588,15 @@ int analysis_data_tcu_PGN8704(struct charge_task * thiz){
 void *thread_tcu_control(void *arg) ___THREAD_ENTRY___
 {
 	int stop;
+	int i=0;
 	while (1){
-			printf("Please input tcu_stage\n  1版本校验\n  2下发参数\n  4启动充电\n  6停止充电\n  8心跳开始\n  ９对时开始\n");
+			printf("Please input tcu_stage\n  1版本校验\n  2下发参数\n  3连接确认\n  4启动充电\n  6停止充电\n  8心跳开始\n  ９对时开始\n");
 			printf(">\n");
 			scanf ("%d", &stop);
 			getchar();
+			for(i=0;i<19;i++){
+				statistics[i].can_silence = 0;
+			}
 			if(stop == 1){
 				task->tcu_stage = TCU_STAGE_CHECKVER;
 				task->tcu_tmp_stage = TCU_STAGE_CHECKVER;
@@ -1592,9 +1605,14 @@ void *thread_tcu_control(void *arg) ___THREAD_ENTRY___
 			}else if(stop == 2){
 				task->tcu_stage = TCU_STAGE_PARAMETER;
 				task->tcu_tmp_stage = TCU_STAGE_PARAMETER;
+			}else if(stop == 3){
+				task->tcu_stage = TCU_STAGE_CONNECT;//TCU_STAGE_CONNECT;
+				task->tcu_tmp_stage = TCU_STAGE_CONNECT;//TCU_STAGE_CONNECT;
 			}else	if (stop == 4){
 				task->tcu_stage = TCU_STAGE_START;
 				task->tcu_tmp_stage = TCU_STAGE_START;
+				task->tcu_heartbeat_stage  = TCU_STAGE_HEAT;//心跳
+				task->tcu_time_stage  = TCU_STAGE_TIME;//对时
 			}else if(stop == 6){
 				task->tcu_stage = TCU_STAGE_STOP;
 				task->tcu_tmp_stage = TCU_STAGE_STOP;
@@ -1609,6 +1627,7 @@ void *thread_tcu_control(void *arg) ___THREAD_ENTRY___
 			}else{
 				task->tcu_stage = TCU_STAGE_ANY;
 				task->tcu_tmp_stage = TCU_STAGE_ANY;
+				printf("Please input tcu_stage\n  1版本校验\n  2下发参数\n  3连接确认\n  4启动充电\n  6停止充电\n  8心跳开始\n  ９对时开始\n");
 				printf("Sorry! input error\n\n");
 			}
 		}

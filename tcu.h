@@ -435,6 +435,7 @@ struct charge_task {
     TCU_STAGE tcu_heartbeat_stage;
     TCU_STAGE tcu_time_stage;
     TCU_STAGE tcu_cct_stage;
+    TCU_STAGE tcu_wait_stage;
 
     // CAN TCU 通信所处状态
     CAN_TCU_STATUS can_tcu_status;
