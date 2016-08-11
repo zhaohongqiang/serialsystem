@@ -293,7 +293,7 @@ void Hachiko_packet_heart_beart_notify_proc(Hachiko_EVT evt, void *private,
          *
          * BEM和CEM不在超时统计范围内
          */
-#if 1
+#if 0
         for ( i = 0;
               (unsigned int)i < (sizeof(statistics) / sizeof(struct tcu_statistics) ) - 2; i++ ) {
             me = &statistics[i];
@@ -1161,11 +1161,16 @@ int gen_packet_tcu_PGN1792(struct charge_task * thiz, struct event_struct* param
     struct can_pack_generator *gen = &generator[TCU_TCV];
 
     memset(param->buff.tx_buff, 0xFF, sizeof(struct pgn1792_TCV));
-	memset(&thiz->tcv_info, 0xFF, sizeof(struct pgn1792_TCV));
+
     param->buff.tx_buff[0] = 12;
     param->buff.tx_buff[1] = 10;
+
+    memset(&thiz->tcv_info, 0xFF, sizeof(struct pgn1792_TCV));
     thiz->tcv_info.spn_tcu_version[0] = 12;
     thiz->tcv_info.spn_tcu_version[1] = 10;
+    //set_data_tcu_PGN1792(thiz);
+	//memcpy(param->buff.tx_buff, &thiz->tcv_info, sizeof(struct pgn1792_TCV));
+
     param->buff_payload = gen->datalen;
     param->can_id = gen->prioriy << 26 | gen->pgn << 8 | CAN_TX_ID_MASK | CAN_EFF_FLAG;
     param->evt_param = EVT_RET_OK;
@@ -1174,7 +1179,7 @@ int gen_packet_tcu_PGN1792(struct charge_task * thiz, struct event_struct* param
     return 0;
 }
 
-int get_data_tcu_PGN1792(struct charge_task * thiz){
+int set_data_tcu_PGN1792(struct charge_task * thiz){
 	memset(&thiz->tcv_info, 0xFF, sizeof(struct pgn1792_TCV));
     thiz->tcv_info.spn_tcu_version[0] = 12;
     thiz->tcv_info.spn_tcu_version[1] = 10;
@@ -1187,15 +1192,6 @@ int gen_packet_tcu_PGN2304(struct charge_task * thiz, struct event_struct* param
     struct can_pack_generator *gen = &generator[TCU_TCP];
 
     memset(param->buff.tx_buff, 0xFF,  gen->datalen);
-	memset(&thiz->tcp_info, 0xFF, sizeof(struct pgn2304_TCP));
-	thiz->tcp_info.spn2304_charger_sn[0] = 0x00;
-	thiz->tcp_info.spn2304_charger_sn[1] = 0x00;
-	thiz->tcp_info.spn2304_charger_sn[2] = 0x00;
-	thiz->tcp_info.spn2304_charger_sn[3] = 0x00;
-
-	thiz->tcp_info.spn2304_charger_region_code[0] = '1';
-	thiz->tcp_info.spn2304_charger_region_code[1] = '1';
-	thiz->tcp_info.spn2304_charger_region_code[2] = '1';
 
     param->buff.tx_buff[0] = 0x00;
     param->buff.tx_buff[1] = 0x00;
@@ -1205,6 +1201,16 @@ int gen_packet_tcu_PGN2304(struct charge_task * thiz, struct event_struct* param
     param->buff.tx_buff[5] = '1';
     param->buff.tx_buff[6] = '1';
 
+    memset(&thiz->tcp_info, 0xFF, sizeof(struct pgn2304_TCP));
+	thiz->tcp_info.spn2304_charger_sn[0] = 0x00;
+	thiz->tcp_info.spn2304_charger_sn[1] = 0x00;
+	thiz->tcp_info.spn2304_charger_sn[2] = 0x00;
+	thiz->tcp_info.spn2304_charger_sn[3] = 0x00;
+	thiz->tcp_info.spn2304_charger_region_code[0] = '1';
+	thiz->tcp_info.spn2304_charger_region_code[1] = '1';
+	thiz->tcp_info.spn2304_charger_region_code[2] = '1';
+    //set_data_tcu_PGN2304(thiz);
+	//memcpy(param->buff.tx_buff, &thiz->tcp_info, sizeof(struct pgn2304_TCP));
 
     param->buff_payload = gen->datalen;
     param->can_id = gen->prioriy << 26 | gen->pgn << 8 | CAN_TX_ID_MASK | CAN_EFF_FLAG;
@@ -1214,13 +1220,12 @@ int gen_packet_tcu_PGN2304(struct charge_task * thiz, struct event_struct* param
     return 0;
 }
 
-int get_data_tcu_PGN2304(struct charge_task * thiz){
+int set_data_tcu_PGN2304(struct charge_task * thiz){
 	memset(&thiz->tcp_info, 0xFF, sizeof(struct pgn2304_TCP));
 	thiz->tcp_info.spn2304_charger_sn[0] = 0x00;
 	thiz->tcp_info.spn2304_charger_sn[1] = 0x00;
 	thiz->tcp_info.spn2304_charger_sn[2] = 0x00;
 	thiz->tcp_info.spn2304_charger_sn[3] = 0x00;
-
 	thiz->tcp_info.spn2304_charger_region_code[0] = '1';
 	thiz->tcp_info.spn2304_charger_region_code[1] = '1';
 	thiz->tcp_info.spn2304_charger_region_code[2] = '1';
@@ -1233,11 +1238,16 @@ int gen_packet_tcu_PGN256(struct charge_task * thiz, struct event_struct* param)
     struct can_pack_generator *gen = &generator[TCU_TRC];
 
     memset(param->buff.tx_buff, 0xFF, sizeof(struct pgn256_TRC));
-	memset(&thiz->tcv_info, 0xFF, sizeof(struct pgn256_TRC));
+
     param->buff.tx_buff[0] = 0;
     param->buff.tx_buff[1] = 2;
+
+    memset(&thiz->tcv_info, 0xFF, sizeof(struct pgn256_TRC));
     thiz->trc_info.spn256_port = 0;
     thiz->trc_info.spn256_load_control = 2;
+    //set_data_tcu_PGN256(thiz);
+    //memcpy(param->buff.tx_buff, &thiz->trc_info, sizeof(struct pgn256_TRC));
+
     param->buff_payload = gen->datalen;
     param->can_id = gen->prioriy << 26 | gen->pgn << 8 | CAN_TX_ID_MASK | CAN_EFF_FLAG;
     param->evt_param = EVT_RET_OK;
@@ -1246,7 +1256,7 @@ int gen_packet_tcu_PGN256(struct charge_task * thiz, struct event_struct* param)
     return 0;
 }
 
-int get_data_tcu_PGN256(struct charge_task * thiz){
+int set_data_tcu_PGN256(struct charge_task * thiz){
 	memset(&thiz->tcv_info, 0xFF, sizeof(struct pgn256_TRC));
 	thiz->trc_info.spn256_port = 0;
 	thiz->trc_info.spn256_load_control = 2;
@@ -1261,11 +1271,16 @@ int gen_packet_tcu_PGN768(struct charge_task * thiz, struct event_struct* param)
     struct can_pack_generator *gen = &generator[TCU_TST];
 
     memset(param->buff.tx_buff, 0xFF, sizeof(struct pgn768_TST));
-	memset(&thiz->tcv_info, 0xFF, sizeof(struct pgn768_TST));
+
     param->buff.tx_buff[0] = 0;
     param->buff.tx_buff[1] = 0x02;
+
+    memset(&thiz->tcv_info, 0xFF, sizeof(struct pgn768_TST));
     thiz->tst_info.spn768_port = 0;
     thiz->tst_info.spn768_status = 0x02;
+    //set_data_tcu_PGN768(thiz);
+    //memcpy(param->buff.tx_buff, &thiz->tst_info, sizeof(struct pgn768_TST));
+
     param->buff_payload = gen->datalen;
     param->can_id = gen->prioriy << 26 | gen->pgn << 8 | CAN_TX_ID_MASK | CAN_EFF_FLAG;
     param->evt_param = EVT_RET_OK;
@@ -1274,7 +1289,7 @@ int gen_packet_tcu_PGN768(struct charge_task * thiz, struct event_struct* param)
     return 0;
 }
 
-int get_data_tcu_PGN768(struct charge_task * thiz){
+int set_data_tcu_PGN768(struct charge_task * thiz){
 	memset(&thiz->tcv_info, 0xFF, sizeof(struct pgn768_TST));
 	thiz->tst_info.spn768_port = 0;
 	thiz->tst_info.spn768_status = 0x02;
@@ -1347,7 +1362,7 @@ int gen_packet_tcu_PGN1280(struct charge_task * thiz, struct event_struct* param
     return 0;
 }
 
-int get_data_tcu_PGN1280(struct charge_task * thiz){
+int set_data_tcu_PGN1280(struct charge_task * thiz){
 
 	return 0;
 }
@@ -1359,14 +1374,15 @@ int gen_packet_tcu_PGN12544(struct charge_task * thiz, struct event_struct* para
     struct can_pack_generator *gen = &generator[TCU_THB];
 
     memset(param->buff.tx_buff, 0xFF, sizeof(struct pgn12544_THB));
-	memset(&thiz->thb_info, 0xFF, sizeof(struct pgn12544_THB));
 
+	memset(&thiz->thb_info, 0xFF, sizeof(struct pgn12544_THB));
     thiz->thb_info.spn12544_port = 0;
     thiz->thb_info.spn12544_status = 0x00;
     thiz->thb_info.spn12544_ele[0] = '0';
     thiz->thb_info.spn12544_ele[1] = '2';
     thiz->thb_info.spn12544_time[0] = '0';
     thiz->thb_info.spn12544_time[1] = '2';
+    //set_data_tcu_PGN12544(thiz);
     memcpy(param->buff.tx_buff, &thiz->thb_info, sizeof(struct pgn12544_THB));
 
     param->buff_payload = gen->datalen;
@@ -1377,7 +1393,7 @@ int gen_packet_tcu_PGN12544(struct charge_task * thiz, struct event_struct* para
     return 0;
 }
 
-int get_data_tcu_PGN12544(struct charge_task * thiz){
+int set_data_tcu_PGN12544(struct charge_task * thiz){
 
 	memset(&thiz->thb_info, 0xFF, sizeof(struct pgn12544_THB));
 	thiz->thb_info.spn12544_port = 0;
@@ -1390,18 +1406,18 @@ int get_data_tcu_PGN12544(struct charge_task * thiz){
 	return 0;
 }
 
-
 // TCU启动完成应答帧
 int gen_packet_tcu_PGN4608(struct charge_task * thiz, struct event_struct* param)
 {
     struct can_pack_generator *gen = &generator[TCU_TRSF];
 
     memset(param->buff.tx_buff, 0xFF, sizeof(struct pgn4608_TRSF));
-	memset(&thiz->thb_info, 0xFF, sizeof(struct pgn4608_TRSF));
 
+	memset(&thiz->trsf_info, 0xFF, sizeof(struct pgn4608_TRSF));
     thiz->trsf_info.spn4608_port = 0;
-    thiz->trsf_info.spn4608_load_control = 0;
+    thiz->trsf_info.spn4608_load_control = 2;
     thiz->trsf_info.spn4608_status = 0x00;
+    //set_data_tcu_PGN4608(thiz);
     memcpy(param->buff.tx_buff, &thiz->thb_info, sizeof(struct pgn4608_TRSF));
 
     param->buff_payload = gen->datalen;
@@ -1412,20 +1428,15 @@ int gen_packet_tcu_PGN4608(struct charge_task * thiz, struct event_struct* param
     return 0;
 }
 
+int set_data_tcu_PGN4608(struct charge_task * thiz){
 
-
-
-
-int get_data_tcu_PGN4608(struct charge_task * thiz){
-
-	memset(&thiz->thb_info, 0xFF, sizeof(struct pgn4608_TRSF));
+	memset(&thiz->trsf_info, 0xFF, sizeof(struct pgn4608_TRSF));
 	thiz->trsf_info.spn4608_port = 0;
-	thiz->trsf_info.spn4608_load_control = 0;
+	thiz->trsf_info.spn4608_load_control = 2;
 	thiz->trsf_info.spn4608_status = 0x00;
 
 	return 0;
 }
-
 
 // TCU停止完成应答帧
 int gen_packet_tcu_PGN5120(struct charge_task * thiz, struct event_struct* param)
@@ -1433,12 +1444,13 @@ int gen_packet_tcu_PGN5120(struct charge_task * thiz, struct event_struct* param
     struct can_pack_generator *gen = &generator[TCU_TRST];
 
     memset(param->buff.tx_buff, 0xFF, sizeof(struct pgn5120_TRST));
-	memset(&thiz->thb_info, 0xFF, sizeof(struct pgn5120_TRST));
 
+	memset(&thiz->trst_info, 0xFF, sizeof(struct pgn5120_TRST));
     thiz->trst_info.spn5120_port = 0;
-    thiz->trst_info.spn5120_Stop_reason = 0;
+    thiz->trst_info.spn5120_Stop_reason = 0x01;
     thiz->trst_info.spn5120_status = 0x00;
-    memcpy(param->buff.tx_buff, &thiz->thb_info, sizeof(struct pgn5120_TRST));
+    //set_data_tcu_PGN5120(thiz);
+    memcpy(param->buff.tx_buff, &thiz->trst_info, sizeof(struct pgn5120_TRST));
 
     param->buff_payload = gen->datalen;
     param->can_id = gen->prioriy << 26 | gen->pgn << 8 | CAN_TX_ID_MASK | CAN_EFF_FLAG;
@@ -1448,12 +1460,11 @@ int gen_packet_tcu_PGN5120(struct charge_task * thiz, struct event_struct* param
     return 0;
 }
 
+int set_data_tcu_PGN5120(struct charge_task * thiz){
 
-int get_data_tcu_PGN5120(struct charge_task * thiz){
-
-	memset(&thiz->thb_info, 0xFF, sizeof(struct pgn5120_TRST));
+	memset(&thiz->trst_info, 0xFF, sizeof(struct pgn5120_TRST));
 	thiz->trst_info.spn5120_port = 0;
-	thiz->trst_info.spn5120_Stop_reason = 0;
+	thiz->trst_info.spn5120_Stop_reason = 0x01;
 	thiz->trst_info.spn5120_status = 0x00;
 
 	return 0;
@@ -1469,6 +1480,7 @@ int gen_packet_tcu_PGN5632(struct charge_task * thiz, struct event_struct* param
 
     thiz->trct_info.spn5632_port = 0;
     thiz->trct_info.spn5632_status = 0x00;
+    //set_data_tcu_PGN5632(thiz);
     memcpy(param->buff.tx_buff, &thiz->thb_info, sizeof(struct pgn5632_TRCT));
 
     param->buff_payload = gen->datalen;
@@ -1479,7 +1491,7 @@ int gen_packet_tcu_PGN5632(struct charge_task * thiz, struct event_struct* param
     return 0;
 }
 
-int get_data_tcu_PGN5632(struct charge_task * thiz){
+int set_data_tcu_PGN5632(struct charge_task * thiz){
 	memset(&thiz->trct_info, 0xFF, sizeof(struct pgn5632_TRCT));
 	thiz->trct_info.spn5632_port = 0;
 	thiz->trct_info.spn5632_status = 0x00;
@@ -1491,14 +1503,17 @@ int recv_data_tcu_PGN512(struct charge_task * thiz,struct event_struct* param){
 	memcpy(&thiz->crrc_info, param->buff.rx_buff, sizeof(struct pgn512_CRRC));
 	return 0;
 }
+
 int recv_data_tcu_PGN1024(struct charge_task * thiz,struct event_struct* param){
 	memcpy(&thiz->crst_info, param->buff.rx_buff, sizeof(struct pgn1024_CRST));
 	return 0;
 }
+
 int recv_data_tcu_PGN1536(struct charge_task * thiz,struct event_struct* param){
 	memcpy(&thiz->crts_info, param->buff.rx_buff, sizeof(struct pgn1536_CRTS));
 	return 0;
 }
+
 int recv_data_tcu_PGN2048(struct charge_task * thiz,struct event_struct* param){
 
 	memcpy(&thiz->crcv_info, param->buff.rx_buff, sizeof(struct pgn2048_CRCV));
@@ -1510,23 +1525,28 @@ int recv_data_tcu_PGN2560(struct charge_task * thiz,struct event_struct* param){
 	memcpy(&thiz->crcp_info, param->buff.rx_buff, sizeof(struct pgn2560_CRCP));
 	return 0;
 }
+
 int recv_data_tcu_PGN4352(struct charge_task * thiz,struct event_struct* param){
 	memcpy(&thiz->csf_info, param->buff.rx_buff, sizeof(struct pgn4352_CSF));
 	return 0;
 }
+
 int recv_data_tcu_PGN4864(struct charge_task * thiz,struct event_struct* param){
 
 	memcpy(&thiz->cst_info, param->buff.rx_buff, sizeof(struct pgn4864_CST));
 	return 0;
 }
+
 int recv_data_tcu_PGN5376(struct charge_task * thiz,struct event_struct* param){
 	memcpy(&thiz->cct_info, param->buff.rx_buff, sizeof(struct pgn5376_CCT));
 	return 0;
 }
+
 int recv_data_tcu_PGN8448(struct charge_task * thiz,struct event_struct* param){
 	memcpy(&thiz->crf_info, param->buff.rx_buff, sizeof(struct pgn8448_CRF));
 	return 0;
 }
+
 int recv_data_tcu_PGN8704(struct charge_task * thiz,struct event_struct* param){
 	memcpy(&thiz->ctf_info, param->buff.rx_buff, sizeof(struct pgn8704_CTF));
 	return 0;
@@ -1541,6 +1561,7 @@ int analysis_data_tcu_PGN512(struct charge_task * thiz){
 	}
 	return 0;
 }
+
 int analysis_data_tcu_PGN1024(struct charge_task * thiz){
 	if(0 == thiz->crst_info.spn1024_status){
 		log_printf(INF, "TCU: TCU  "GRN("停止充电命令确认成功"));
@@ -1549,6 +1570,7 @@ int analysis_data_tcu_PGN1024(struct charge_task * thiz){
 	}
 	return 0;
 }
+
 int analysis_data_tcu_PGN1536(struct charge_task * thiz){
 	if(0 == thiz->crts_info.spn1536_confirm){
 		log_printf(INF, "TCU: TCU  "GRN("对时确认"));
@@ -1564,6 +1586,7 @@ int analysis_data_tcu_PGN1536(struct charge_task * thiz){
 
 	return 0;
 }
+
 int analysis_data_tcu_PGN2048(struct charge_task * thiz){
 	if(0 == strcmp(thiz->tcv_info.spn_tcu_version,thiz->crcv_info.spn_charging_version)){
 		log_printf(INF, "TCU: TCU  "GRN("版本校验成功"));
@@ -1575,6 +1598,7 @@ int analysis_data_tcu_PGN2048(struct charge_task * thiz){
 	//else if(thiz->tcv_info.spn_tcu_version[0] != thiz->crcv_info.spn_charging_version[0])
 	return 0;
 }
+
 int analysis_data_tcu_PGN2560(struct charge_task * thiz){
 	if(0 == thiz->crcp_info.spn2560_charger_status){
 		log_printf(INF, "TCU: TCU  "GRN("充电参数正确"));
@@ -1584,6 +1608,7 @@ int analysis_data_tcu_PGN2560(struct charge_task * thiz){
 
 	return 0;
 }
+
 int analysis_data_tcu_PGN4352(struct charge_task * thiz){
 	if(0 == thiz->csf_info.spn4352_status){
 		log_printf(INF, "TCU: TCU  "GRN("启动充电成功"));
@@ -1593,6 +1618,7 @@ int analysis_data_tcu_PGN4352(struct charge_task * thiz){
 
 	return 0;
 }
+
 int analysis_data_tcu_PGN4864(struct charge_task * thiz){
 	if(0 == thiz->cst_info.spn4864_status){
 		log_printf(INF, "TCU: TCU  "GRN("停止充电成功"));
@@ -1601,20 +1627,21 @@ int analysis_data_tcu_PGN4864(struct charge_task * thiz){
 	}
 	return 0;
 }
+
 int analysis_data_tcu_PGN5376(struct charge_task * thiz){
 
 	return 0;
 }
+
 int analysis_data_tcu_PGN8448(struct charge_task * thiz){
 
 	return 0;
 }
+
 int analysis_data_tcu_PGN8704(struct charge_task * thiz){
 
 	return 0;
 }
-
-
 
 void *thread_tcu_control(void *arg) ___THREAD_ENTRY___
 {

@@ -513,15 +513,15 @@ int gen_packet_tcu_PGN5120(struct charge_task * thiz,
 int gen_packet_tcu_PGN5632(struct charge_task * thiz,
 						struct event_struct* param);
 
-int get_data_tcu_PGN1792(struct charge_task * thiz);
-int get_data_tcu_PGN2304(struct charge_task * thiz);
-int get_data_tcu_PGN5632(struct charge_task * thiz);
-int get_data_tcu_PGN256(struct charge_task * thiz);
-int get_data_tcu_PGN768(struct charge_task * thiz);
-int get_data_tcu_PGN1280(struct charge_task * thiz);
-int get_data_tcu_PGN4608(struct charge_task * thiz);
-int get_data_tcu_PGN5120(struct charge_task * thiz);
-int get_data_tcu_PGN12544(struct charge_task * thiz);
+int set_data_tcu_PGN1792(struct charge_task * thiz);
+int set_data_tcu_PGN2304(struct charge_task * thiz);
+int set_data_tcu_PGN5632(struct charge_task * thiz);
+int set_data_tcu_PGN256(struct charge_task * thiz);
+int set_data_tcu_PGN768(struct charge_task * thiz);
+int set_data_tcu_PGN1280(struct charge_task * thiz);
+int set_data_tcu_PGN4608(struct charge_task * thiz);
+int set_data_tcu_PGN5120(struct charge_task * thiz);
+int set_data_tcu_PGN12544(struct charge_task * thiz);
 
 int recv_data_tcu_PGN512(struct charge_task * thiz,struct event_struct* param);
 int recv_data_tcu_PGN1024(struct charge_task * thiz,struct event_struct* param);
