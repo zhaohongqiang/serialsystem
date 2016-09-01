@@ -1,5 +1,10 @@
 #ifndef _ERROR_H_
 #define _ERROR_H_
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define ___THREAD_ENTRY___
 // 没有错误
 #define ERR_OK    0x00000000
@@ -27,3 +32,7 @@
 #define ERR_NEED_ECHO   (ERR_ERR|0x01000000)
 
 #endif /*_ERROR_H_*/
+
+#ifdef __cplusplus
+}
+#endif

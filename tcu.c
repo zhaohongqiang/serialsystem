@@ -17,6 +17,8 @@
 #include "tcu.h"
 #include "log.h"
 #include "error.h"
+#include "global.h"
+
 //计费控制单元ＴＣＵ　　　充电机Ｃ
 // 数据包生成器信息
 struct can_pack_generator generator[] = {
@@ -25,7 +27,7 @@ struct can_pack_generator generator[] = {
 	.stage      =  TCU_STAGE_START,
 	.pgn        =  0x00100,
 	.prioriy    =  4,
-	.datalen    =  8,
+	.datalen    =  2,
 	.period     =  250,
 	.heartbeat   =  0,
 	.mnemonic   =  "TRC"
@@ -34,7 +36,7 @@ struct can_pack_generator generator[] = {
 	.stage      =  TCU_STAGE_STOP,
 	.pgn        =  0x000300,
 	.prioriy    =  4,
-	.datalen    =  8,
+	.datalen    =  2,
 	.period     =  250,
 	.heartbeat   =  0,
 	.mnemonic   =  "TST"
@@ -61,7 +63,7 @@ struct can_pack_generator generator[] = {
 	.stage      =  TCU_STAGE_PARAMETER,
 	.pgn        =  0x000900,
 	.prioriy    =  6,
-	.datalen    =  8,
+	.datalen    =  7,
 	.period     =  500,
 	.heartbeat   =  0,
 	.mnemonic   =  "TCP"
@@ -70,7 +72,7 @@ struct can_pack_generator generator[] = {
 	.stage      =  TCU_STAGE_STATUS,
 	.pgn        =  0x001200,
 	.prioriy    =  4,
-	.datalen    =  8,
+	.datalen    =  3,
 	.period     =  250,
 	.heartbeat   =  0,
 	.mnemonic   =  "TRSF"
@@ -79,7 +81,7 @@ struct can_pack_generator generator[] = {
 	.stage      =  TCU_STAGE_STOP_STATUS,
 	.pgn        =  0x001400,
 	.prioriy    =  4,
-	.datalen    =  8,
+	.datalen    =  3,
 	.period     =  250,
 	.heartbeat   =  0,
 	.mnemonic   =  "TRST"
@@ -88,7 +90,7 @@ struct can_pack_generator generator[] = {
     .stage      =  TCU_STAGE_CONNECT,
     .pgn        =  0x001600,
     .prioriy    =  4,
-    .datalen    =  8,
+    .datalen    =  2,
     .period     =  250,
     .heartbeat   =  0,
     .mnemonic   =  "TRCT"
@@ -598,7 +600,7 @@ int about_packet_reciev_done(struct charge_task *thiz,
 			thiz->tcu_tmp_stage = TCU_STAGE_PARAMETER;
 			log_printf(INF, "TCU: TCU change stage to "RED("TCU_STAGE_PARAMETER"));
 			recv_data_tcu_PGN2048(thiz,param);
-			//analysis_data_tcu_PGN2048(thiz);
+            analysis_data_tcu_PGN2048(thiz);
 		}
         break;
     case PGN_CRCP:
@@ -610,9 +612,9 @@ int about_packet_reciev_done(struct charge_task *thiz,
 		 if ( thiz->tcu_stage == TCU_STAGE_PARAMETER) {
 			//thiz->charge_stage = TCU_STAGE_CONNECT;
 			 recv_data_tcu_PGN2560(thiz,param);
-			 //analysis_data_tcu_PGN2560(thiz);
+             analysis_data_tcu_PGN2560(thiz);
 			log_printf(INF, "TCU: TCU now stage to "RED("TCU_STAGE_PARAMETER"));
-			thiz->tcu_wait_stage =TCU_STAGE_ANY;
+			//thiz->tcu_wait_stage =TCU_STAGE_ANY;
 		}
 //		 if( thiz->tcu_cct_stage == TCU_STAGE_CONNECT){
 //			 thiz->tcu_stage = TCU_STAGE_CONNECT;
@@ -623,8 +625,8 @@ int about_packet_reciev_done(struct charge_task *thiz,
     case PGN_CCT:
     	statistics[I_CCT].can_counter ++;
 		statistics[I_CCT].can_silence = 0;
-		log_printf(INF, "TCU: TCU  now  "GRN("PGN_CCT  0x001500    PGN_5376  Charging连接确认 connect"));
-		printf("now stage ====%d \n", thiz->tcu_stage);
+		//log_printf(INF, "TCU: TCU  now  "GRN("PGN_CCT  0x001500    PGN_5376  Charging连接确认 connect"));
+		//printf("now stage ====%d \n", thiz->tcu_stage);
 		//thiz->tcu_cct_stage = TCU_STAGE_CONNECT;
 		 if ( thiz->tcu_stage == TCU_STAGE_PARAMETER) {
 			thiz->tcu_stage = TCU_STAGE_CONNECT;
@@ -642,6 +644,7 @@ int about_packet_reciev_done(struct charge_task *thiz,
 		 if ( thiz->tcu_stage == TCU_STAGE_START) {
 			//thiz->charge_stage = TCU_STAGE_STATUS;
 			 recv_data_tcu_PGN512(thiz,param);
+             analysis_data_tcu_PGN512(thiz);
 			log_printf(INF, "TCU: TCU now stage to "RED("TCU_STAGE_START"));
 		}
     	break;
@@ -665,6 +668,7 @@ int about_packet_reciev_done(struct charge_task *thiz,
 		 if ( thiz->tcu_stage == TCU_STAGE_STOP) {
 			//thiz->charge_stage = TCU_STAGE_STOP_STATUS;
 			 recv_data_tcu_PGN1024(thiz,param);
+             //analysis_data_tcu_PGN1024(thiz);
 			log_printf(INF, "TCU: TCU now stage to "RED("TCU_STAGE_STOP"));
 		}
     	break;
@@ -945,7 +949,7 @@ void *thread_tcu_read_service(void *arg) ___THREAD_ENTRY___
     unsigned int dbg_packets = 0;
 
     task->can_tp_private.status = PRIVATE_INVALID;
-    task->can_tp_bomb.private = (void *)&task->can_tp_private;
+    task->can_tp_bomb._private = (void *)&task->can_tp_private;
 
     if ( done == NULL ) done = &mydone;
     s = socket(PF_CAN, SOCK_RAW, CAN_RAW);
@@ -1159,17 +1163,28 @@ void *thread_tcu_read_service(void *arg) ___THREAD_ENTRY___
 int gen_packet_tcu_PGN1792(struct charge_task * thiz, struct event_struct* param)
 {
     struct can_pack_generator *gen = &generator[TCU_TCV];
+    unsigned long dec_bcd = 0;
+    //u8 BCD[2] = {0x12,0x10};
+    //u8 tmp_bff[12] = "";int i;
 
     memset(param->buff.tx_buff, 0xFF, sizeof(struct pgn1792_TCV));
 
-    param->buff.tx_buff[0] = 12;
-    param->buff.tx_buff[1] = 10;
+    //param->buff.tx_buff[0] = 12;
+    //param->buff.tx_buff[1] = 10;
 
-    memset(&thiz->tcv_info, 0xFF, sizeof(struct pgn1792_TCV));
-    thiz->tcv_info.spn_tcu_version[0] = 12;
-    thiz->tcv_info.spn_tcu_version[1] = 10;
-    //set_data_tcu_PGN1792(thiz);
-	//memcpy(param->buff.tx_buff, &thiz->tcv_info, sizeof(struct pgn1792_TCV));
+    //memset(&thiz->tcv_info, 0xFF, sizeof(struct pgn1792_TCV));
+//    dec_bcd = BCDtoDec(BCD, 2);
+//    DectoHex(dec_bcd, tmp_bff, 2);
+//    for(i=0; i<2; i++)
+//    {
+//    printf("tmp_bff[%d] = 0x%02X\n",i, tmp_bff[i]);
+//    }
+    //DectoHex(BCDtoDec(BCD,2),thiz->tcv_info.spn_tcu_version,2);
+    //printf("thiz->tcv_info==%d %d\n",thiz->tcv_info.spn_tcu_version[0],thiz->tcv_info.spn_tcu_version[1]);
+    //thiz->tcv_info.spn_tcu_version[0] = 12;
+    //thiz->tcv_info.spn_tcu_version[1] = 10;
+    set_data_tcu_PGN1792(thiz);
+	memcpy(param->buff.tx_buff, &thiz->tcv_info, sizeof(struct pgn1792_TCV));
 
     param->buff_payload = gen->datalen;
     param->can_id = gen->prioriy << 26 | gen->pgn << 8 | CAN_TX_ID_MASK | CAN_EFF_FLAG;
@@ -1180,9 +1195,14 @@ int gen_packet_tcu_PGN1792(struct charge_task * thiz, struct event_struct* param
 }
 
 int set_data_tcu_PGN1792(struct charge_task * thiz){
+	char BCD[5] = "1210";
 	memset(&thiz->tcv_info, 0xFF, sizeof(struct pgn1792_TCV));
-    thiz->tcv_info.spn_tcu_version[0] = 12;
-    thiz->tcv_info.spn_tcu_version[1] = 10;
+	str2bcd(BCD, thiz->tcv_info.spn_tcu_version, 2);
+	//DectoHex(BCDtoDec(BCD,2),thiz->tcv_info.spn_tcu_version,2);
+	printf("thiz->tcv_info==0x%02x 0x%02x\n",thiz->tcv_info.spn_tcu_version[0],thiz->tcv_info.spn_tcu_version[1]);
+    //thiz->tcv_info.spn_tcu_version[0] = 0x12;
+    //thiz->tcv_info.spn_tcu_version[1] = 0x10;
+
 	return 0;
 }
 
@@ -1322,7 +1342,7 @@ int gen_packet_tcu_PGN1280(struct charge_task * thiz, struct event_struct* param
 	//printf("tz_dsttime:%d\n",tz.tz_dsttime);
 
 	p = localtime(&tv.tv_sec);
-	printf("time_now:%4d年%02d月%02d日 %02d:%02d:%02d.%ld\n", 1900+p->tm_year, 1+p->tm_mon, p->tm_mday, p->tm_hour, p->tm_min, p->tm_sec, tv.tv_usec);
+	printf("time_now:%4d年%02d月%02d日 星期%d %02d:%02d:%02d.%ld\n", 1900+p->tm_year, 1+p->tm_mon, p->tm_mday, ( (p->tm_wday==0)  ? 7 : (p->tm_wday) ),p->tm_hour, p->tm_min, p->tm_sec, tv.tv_usec);
 
 	memset(&thiz->tts_info, 0xFF, sizeof(struct pgn1280_TTS));
     thiz->tts_info.spn1280_Immediately = 0;
@@ -1331,25 +1351,12 @@ int gen_packet_tcu_PGN1280(struct charge_task * thiz, struct event_struct* param
 	thiz->tts_info.spn1280_bcd_sec_l = mm&0xff;
 	thiz->tts_info.spn1280_bcd_sec_h = (mm&0xff00)>>8;
 	thiz->tts_info.spn1280_bcd_min = p->tm_min & 0xff;
-	thiz->tts_info.spn1280_bcd_hour = p->tm_hour & 0xff;
-	thiz->tts_info.spn1280_bcd_day = p->tm_mday & 0xff;
-	thiz->tts_info.spn1280_bcd_mon = (p->tm_mon+1) & 0x0f ;
+	thiz->tts_info.spn1280_bcd_hour = p->tm_hour & 0xff;//０标准时间　　１夏季时间
+	//thiz->tts_info.spn1280_bcd_hour = (p->tm_hour & 0x1f) |0x7f;//０标准时间　　１夏季时间
+	//thiz->tts_info.spn1280_bcd_day = p->tm_mday & 0xff;
+	thiz->tts_info.spn1280_bcd_day = (( ( (p->tm_wday==0)  ? 7 : (p->tm_wday) ) & 0x07) << 5) | (p->tm_mday & 0x1f) ;//
+	thiz->tts_info.spn1280_bcd_mon = (p->tm_mon+1) & 0x0f ;//1f
 	thiz->tts_info.spn1280_bcd_year = (p->tm_year-100) & 0xff;
-
-//    thiz->tts_info.spn1280_bcd_sec = (((p->tm_sec / 10 ) & 0x0F ) << 4) |
-//               ((p->tm_sec % 10) & 0x0F);
-//    thiz->tts_info.spn1280_bcd_min = (((p->tm_min / 10 ) & 0x0F ) << 4) |
-//               ((p->tm_min % 10) & 0x0F);
-//    thiz->tts_info.spn1280_bcd_hour = (((p->tm_hour / 10 ) & 0x0F ) << 4) |
-//               ((p->tm_hour % 10) & 0x0F);
-//    thiz->tts_info.spn1280_bcd_day = (((p->tm_mday / 10 ) & 0x0F ) << 4) |
-//               ((p->tm_mday % 10) & 0x0F);
-//    thiz->tts_info.spn1280_bcd_mon = (((p->tm_mon / 10 ) & 0x0F ) << 4) |
-//               ((p->tm_mon % 10) & 0x0F);
-//    thiz->tts_info.spn1280_bcd_year_h = (((p->tm_year / 100 ) & 0x0F ) << 4) |
-//               ((p->tm_year % 100) & 0x0F);
-//    thiz->tts_info.spn1280_bcd_year_l = (((p->tm_year / 10 ) & 0x0F ) << 4) |
-//               ((p->tm_year % 10) & 0x0F);
 
 	memset(param->buff.tx_buff, 0xFF, sizeof(struct pgn1280_TTS));
 	memcpy(param->buff.tx_buff, &thiz->tts_info, sizeof(struct pgn1280_TTS));
@@ -1378,6 +1385,7 @@ int gen_packet_tcu_PGN12544(struct charge_task * thiz, struct event_struct* para
 	memset(&thiz->thb_info, 0xFF, sizeof(struct pgn12544_THB));
     thiz->thb_info.spn12544_port = 0;
     thiz->thb_info.spn12544_status = 0x00;
+    thiz->thb_info.spn12544_rev = 0x00;
     thiz->thb_info.spn12544_ele[0] = '0';
     thiz->thb_info.spn12544_ele[1] = '2';
     thiz->thb_info.spn12544_time[0] = '0';
@@ -1558,6 +1566,7 @@ int analysis_data_tcu_PGN512(struct charge_task * thiz){
 		log_printf(INF, "TCU: TCU  "GRN("启动充电成功"));
 	}else{
 		log_printf(INF, "TCU: TCU  "GRN("启动充电失败"));
+        thiz->tcu_err_stage = TCU_ERR_STAGE_STOP;
 	}
 	return 0;
 }
@@ -1594,6 +1603,7 @@ int analysis_data_tcu_PGN2048(struct charge_task * thiz){
 		log_printf(INF, "TCU: TCU  "GRN("版本校验失败"));
 		 thiz->tcu_stage = TCU_STAGE_CHECKVER;
 		 thiz->tcu_tmp_stage = TCU_STAGE_CHECKVER;
+         thiz->tcu_err_stage = TCU_ERR_STAGE_CHECKVER;
 	}
 	//else if(thiz->tcv_info.spn_tcu_version[0] != thiz->crcv_info.spn_charging_version[0])
 	return 0;
@@ -1604,6 +1614,7 @@ int analysis_data_tcu_PGN2560(struct charge_task * thiz){
 		log_printf(INF, "TCU: TCU  "GRN("充电参数正确"));
 	}else{
 		log_printf(INF, "TCU: TCU  "GRN("充电参数不匹配"));
+         thiz->tcu_err_stage = TCU_ERR_STAGE_PARAMETER;
 	}
 
 	return 0;
@@ -1664,6 +1675,7 @@ void *thread_tcu_control(void *arg) ___THREAD_ENTRY___
 				task->tcu_stage = TCU_STAGE_PARAMETER;
 				task->tcu_tmp_stage = TCU_STAGE_PARAMETER;
 			}else if(stop == 3){
+				task->tcu_wait_stage =TCU_STAGE_INVALID;
 				task->tcu_stage = TCU_STAGE_CONNECT;//TCU_STAGE_CONNECT;
 				task->tcu_tmp_stage = TCU_STAGE_CONNECT;//TCU_STAGE_CONNECT;
 			}else	if (stop == 4){
@@ -1690,4 +1702,149 @@ void *thread_tcu_control(void *arg) ___THREAD_ENTRY___
 			}
 		}
 	return NULL;
+}
+
+
+
+/////////////////////////////////////////////////////
+//
+//功能：二进制取反
+//
+//输入：const unsigned char *src 二进制数据
+// int length 待转换的二进制数据长度
+//
+//输出：unsigned char *dst 取反后的二进制数据
+//
+//返回：0 success
+//
+//////////////////////////////////////////////////////
+int convert(unsigned char *dst, const unsigned char *src, int length)
+{
+int i;
+for(i=0; i<length; i++)
+{
+dst[i] = src[i]^0xFF;
+}
+return 0;
+}
+//////////////////////////////////////////////////////////
+//
+//功能：十六进制转为十进制
+//
+//输入：const unsigned char *hex 待转换的十六进制数据
+// int length 十六进制数据长度
+//
+//输出：
+//
+//返回：int rslt 转换后的十进制数据
+//
+//思路：十六进制每个字符位所表示的十进制数的范围是0 ~255，进制为256
+// 左移8位(<<8)等价乘以256
+//
+/////////////////////////////////////////////////////////
+unsigned long HextoDec(const unsigned char *hex, int length)
+{
+int i;
+unsigned long rslt = 0;
+for(i=0; i<length; i++)
+{
+rslt += (unsigned long)(hex[i])<<(8*(length-1-i));
+
+}
+return rslt;
+}
+
+/////////////////////////////////////////////////////////
+//
+//功能：十进制转十六进制
+//
+//输入：int dec 待转换的十进制数据
+// int length 转换后的十六进制数据长度
+//
+//输出：unsigned char *hex 转换后的十六进制数据
+//
+//返回：0 success
+//
+//思路：原理同十六进制转十进制
+//////////////////////////////////////////////////////////
+int DectoHex(int dec, unsigned char *hex, int length)
+{
+int i;
+for(i=length-1; i>=0; i--)
+{
+hex[i] = (dec%256)&0xFF;
+dec /= 256;
+}
+return 0;
+}
+/////////////////////////////////////////////////////////
+//
+//功能：求权
+//
+//输入：int base 进制基数
+// int times 权级数
+//
+//输出：
+//
+//返回：unsigned long 当前数据位的权
+//
+//////////////////////////////////////////////////////////
+unsigned long power(int base, int times)
+{
+int i;
+unsigned long rslt = 1;
+for(i=0; i<times; i++)
+rslt *= base;
+return rslt;
+}
+/////////////////////////////////////////////////////////
+//
+//功能：BCD转10进制
+//
+//输入：const unsigned char *bcd 待转换的BCD码
+// int length BCD码数据长度
+//
+//输出：
+//
+//返回：unsigned long 当前数据位的权
+//
+//思路：压缩BCD码一个字符所表示的十进制数据范围为0 ~ 99,进制为100
+// 先求每个字符所表示的十进制值，然后乘以权
+//////////////////////////////////////////////////////////
+unsigned long BCDtoDec(const unsigned char *bcd, int length)
+{
+int i, tmp;
+unsigned long dec = 0;
+for(i=0; i<length; i++)
+{
+tmp = ((bcd[i]>>4)&0x0F)*10 + (bcd[i]&0x0F);
+dec += tmp * power(100, length-1-i);
+}
+return dec;
+}
+/////////////////////////////////////////////////////////
+//
+//功能：十进制转BCD码
+//
+//输入：int Dec 待转换的十进制数据
+// int length BCD码数据长度
+//
+//输出：unsigned char *Bcd 转换后的BCD码
+//
+//返回：0 success
+//
+//思路：原理同BCD码转十进制
+//
+//////////////////////////////////////////////////////////
+int DectoBCD(int Dec, unsigned char *Bcd, int length)
+{
+int i;
+int temp;
+for(i=length-1; i>=0; i--)
+{
+temp = Dec%100;
+Bcd[i] = ((temp/10)<<4) + ((temp%10) & 0x0F);
+Dec /= 100;
+}
+return 0;
 }

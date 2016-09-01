@@ -6,6 +6,10 @@
 #ifndef _TCU_PACKAGE_INCLUDED_H_
 #define _TCU_PACKAGE_INCLUDED_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // 充电机地址
 #define CAN_ADDR_CHARGER   0xF6  // 242
 // TCU地址
@@ -49,6 +53,28 @@ typedef enum {
     TCU_STAGE_ANY        			=0x0A // 任意阶段
 }TCU_STAGE;
 
+typedef enum {
+    TCU_ERR_STAGE_INVALID      		=0x00,     // TCU状态无效，可能是在初始化或者析构
+    TCU_ERR_STAGE_CHECKVER      	=0x01,//版本校验
+    TCU_ERR_STAGE_PARAMETER   	=0x02,//下发参数
+    TCU_ERR_STAGE_CONNECT     	=0x03,//连接确认应答
+    TCU_ERR_STAGE_START         		=0x04,// 启动充电
+    TCU_ERR_STAGE_STATUS              =0X05,//启动状态完成ｏｒ失败
+    TCU_ERR_STAGE_STOP      			=0X06,//停止充电
+    TCU_ERR_STAGE_STOP_STATUS =0X07,//停止充电完成
+    TCU_ERR_STAGE_HEAT					=0X08,//心跳
+    TCU_ERR_STAGE_TIME					=0X09,//对时
+    TCU_ERR_STAGE_ANY        			=0x0A // 任意阶段
+}TCU_ERR_STAGE;
+
+// TCU 状态定义
+typedef enum {
+    CC_WAIT          =0x00,
+    CC_WORK              =0x01,
+    CC_FULL                 =0x02,
+    CC_WARN              =0x03,
+    CC_ERROR             =0x04
+}CC_STATUS;
 
 // TCU CAN通信状态定义
 typedef enum {
@@ -184,7 +210,7 @@ struct pgn5632_TRCT{//TCU应答连接确认
 };
 struct pgn8448_CRF{//Charging遥信帧
 		u8 spn8448_port;//0-255
-		u8 spn8448_status[4];//工作状态  0000-待机0001-工作 0010-充满 0011-告警0100故障
+        char spn8448_status[4];//工作状态  0000-待机0001-工作 0010-充满 0011-告警0100故障
 		u8 connect_confirm_switch_status;//连接确认开关状态 布尔型, 0连接，1未连接
 		u8 emergency_stop;//急停动作告警  布尔型, 0正常，1异常
 		u8 arrester_fault;//避雷器故障  布尔型, 0正常，1异常
@@ -208,6 +234,7 @@ struct pgn8704_CTF{//Charging遥测帧
 struct pgn12544_THB{//TCU心跳帧
 		u8 spn12544_port;//0-255
 		u8 spn12544_status;//计费控制单元状态信息 0-正常 1-故障
+		u8 spn12544_rev;//保留
 		u8 spn12544_ele[2];//数据分辨率：0.1 kWh/位，0 kWh偏移量；数据范围：0~1000 kWh;	（待机过程中此数据项为0）
 		u8 spn12544_time[2];//数据分辨率：1 min/位，0 min偏移量；数据范围：0~6000 min；		（待机过程中此数据项为0）
 
@@ -238,6 +265,7 @@ typedef enum {
 }CAN_PGN;
 
 #include "Hachiko.h"
+#include "global.h"
 
 /*
  * 读到一个完整数据包后调用该函数
@@ -365,7 +393,7 @@ struct event_struct {
     unsigned int buff_payload;
 };
 
-// BMS通信统计技术结构
+// TCU通信统计技术结构
 struct tcu_statistics {
     // 数据包PGN
     CAN_PGN can_pgn;
@@ -437,6 +465,11 @@ struct charge_task {
     TCU_STAGE tcu_cct_stage;
     TCU_STAGE tcu_wait_stage;
 
+     // 充电出错所处阶段
+    TCU_ERR_STAGE tcu_err_stage;
+
+    CC_STATUS cc_status;
+
     // CAN TCU 通信所处状态
     CAN_TCU_STATUS can_tcu_status;
     // CAN 通信输入缓冲区
@@ -486,9 +519,9 @@ struct charge_task {
 	struct pgn8448_CRF crf_info;//Charging遥信帧
 	struct pgn8704_CTF ctf_info;//Charging遥测帧
 };
-struct charge_task tom;
-struct charge_task *task = &tom;
 
+//struct charge_task tom;
+//struct charge_task *task = &tom;
 
 int about_packet_reciev_done(struct charge_task *thiz,
                              struct event_struct *param);
@@ -584,4 +617,100 @@ static inline unsigned short swap_hi_lo_bytes(unsigned short b)
 #define b2l swap_hi_lo_bytes
 #define l2b swap_hi_lo_bytes
 
+/////////////////////////////////////////////////////
+//
+//功能：二进制取反
+//
+//输入：const unsigned char *src 二进制数据
+// int length 待转换的二进制数据长度
+//
+//输出：unsigned char *dst 取反后的二进制数据
+//
+//返回：0 success
+//
+//////////////////////////////////////////////////////
+int convert(unsigned char *dst, const unsigned char *src, int length);
+
+//////////////////////////////////////////////////////////
+//
+//功能：十六进制转为十进制
+//
+//输入：const unsigned char *hex 待转换的十六进制数据
+// int length 十六进制数据长度
+//
+//输出：
+//
+//返回：int rslt 转换后的十进制数据
+//
+//思路：十六进制每个字符位所表示的十进制数的范围是0 ~255，进制为256
+// 左移8位(<<8)等价乘以256
+//
+/////////////////////////////////////////////////////////
+unsigned long HextoDec(const unsigned char *hex, int length) ;
+
+/////////////////////////////////////////////////////////
+//
+//功能：十进制转十六进制
+//
+//输入：int dec 待转换的十进制数据
+// int length 转换后的十六进制数据长度
+//
+//输出：unsigned char *hex 转换后的十六进制数据
+//
+//返回：0 success
+//
+//思路：原理同十六进制转十进制
+//////////////////////////////////////////////////////////
+int DectoHex(int dec, unsigned char *hex, int length) ;
+
+/////////////////////////////////////////////////////////
+//
+//功能：求权
+//
+//输入：int base 进制基数
+// int times 权级数
+//
+//输出：
+//
+//返回：unsigned long 当前数据位的权
+//
+//////////////////////////////////////////////////////////
+unsigned long power(int base, int times);
+
+/////////////////////////////////////////////////////////
+//
+//功能：BCD转10进制
+//
+//输入：const unsigned char *bcd 待转换的BCD码
+// int length BCD码数据长度
+//
+//输出：
+//
+//返回：unsigned long 当前数据位的权
+//
+//思路：压缩BCD码一个字符所表示的十进制数据范围为0 ~ 99,进制为100
+// 先求每个字符所表示的十进制值，然后乘以权
+//////////////////////////////////////////////////////////
+unsigned long BCDtoDec(const unsigned char *bcd, int length) ;
+
+/////////////////////////////////////////////////////////
+//
+//功能：十进制转BCD码
+//
+//输入：int Dec 待转换的十进制数据
+// int length BCD码数据长度
+//
+//输出：unsigned char *Bcd 转换后的BCD码
+//
+//返回：0 success
+//
+//思路：原理同BCD码转十进制
+//
+//////////////////////////////////////////////////////////
+int DectoBCD(int Dec, unsigned char *Bcd, int length) ;
+
 #endif /*_TCU_PACKAGE_INCLUDED_H_*/
+
+#ifdef __cplusplus
+}
+#endif

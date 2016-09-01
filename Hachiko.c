@@ -61,16 +61,16 @@ static void Hachiko_wangwang(int sig, siginfo_t *si, void *uc)
 
         if ( pool[i]->remain == 0 ) {
             pool[i]->Hachiko_notify_proc(HACHIKO_TIMEOUT,
-                                         pool[i]->private, pool[i]);
+                                         pool[i]->_private, pool[i]);
             if ( pool[i]->type == HACHIKO_AUTO_FEED ) {
                 pool[i]->remain = pool[i]->ttl;
                 pool[i]->Hachiko_notify_proc(HACHIKO_FEEDED,
-                                             pool[i]->private, pool[i]);
+                                             pool[i]->_private, pool[i]);
                 continue;
             }
             if ( pool[i]->type == HACHIKO_ONECE ) {
                 pool[i]->Hachiko_notify_proc(HACHIKO_DIE,
-                                             pool[i]->private, pool[i]);
+                                             pool[i]->_private, pool[i]);
                 pool[i] = NULL;
                 refresh ++;
                 log_printf(DBG_LV3, "HACHIKO: watch dog die.");
@@ -78,14 +78,14 @@ static void Hachiko_wangwang(int sig, siginfo_t *si, void *uc)
             }
         }
         pool[i]->Hachiko_notify_proc(HACHIKO_ROLLING,
-                                     pool[i]->private, pool[i]);
+                                     pool[i]->_private, pool[i]);
     }
     if ( 0 == refresh ) return;
 }
 
 // 设定内部功能性定时器
 int _Hachiko_new(struct Hachiko_food *thiz, Hachiko_Type type,
-                 unsigned int ttl, Hachiko_status status, void *private)
+                 unsigned int ttl, Hachiko_status status, void *_private)
 {
     int err = ERR_TIMER_BEMAX;
     int i = 0;
@@ -100,7 +100,7 @@ int _Hachiko_new(struct Hachiko_food *thiz, Hachiko_Type type,
         thiz->type = type;
         thiz->ttl = ttl;
         thiz->remain = ttl;
-        thiz->private = private;
+        thiz->_private = _private;
         thiz->status = status;
         err = ERR_OK;
         pool[i] = thiz;

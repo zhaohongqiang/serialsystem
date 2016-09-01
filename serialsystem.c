@@ -22,7 +22,8 @@ extern void * thread_tcu_write_service(void *) ___THREAD_ENTRY___;
 extern void * thread_tcu_read_service(void *) ___THREAD_ENTRY___;
 extern void * thread_tcu_control(void *) ___THREAD_ENTRY___;
 //extern void * thread_tcu_heartbeat_service(void *)___THREAD_ENTRY___;
-int main()
+#if 1
+int tcu_canbus()
 {
     pthread_t tid = 0;
     pthread_attr_t attr;
@@ -122,3 +123,4 @@ die:
     log_printf(ERR, "going to die. system aborted!");
     return errcode;
 }
+#endif

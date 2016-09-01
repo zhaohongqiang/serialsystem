@@ -1,5 +1,10 @@
 #ifndef LOG__INCLUDED_H
 #define LOG__INCLUDED_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define INF  0xFF
 #define WRN  0xFE
 #define ERR  0xFD
@@ -18,5 +23,8 @@ int log_printf(unsigned int level, const char *fmt, ...);
 #define RED(s) "\033[31m"s"\033[0m"
 #define YEL(s) "\033[33m"s"\033[0m"
 #define debug_log log_printf
+#endif
 
+#ifdef __cplusplus
+}
 #endif
