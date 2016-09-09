@@ -709,6 +709,9 @@ unsigned long BCDtoDec(const unsigned char *bcd, int length) ;
 //////////////////////////////////////////////////////////
 int DectoBCD(int Dec, unsigned char *Bcd, int length) ;
 
+void bcd2str(const char* inBCD, char *outStr, int len);
+void str2bcd(const char *pstr, u8 *pbcd, int len);
+
 #endif /*_TCU_PACKAGE_INCLUDED_H_*/
 
 #ifdef __cplusplus

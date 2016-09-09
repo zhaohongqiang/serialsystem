@@ -18,6 +18,7 @@
 #include "log.h"
 #include "error.h"
 #include "global.h"
+#include "file.h"
 
 //计费控制单元ＴＣＵ　　　充电机Ｃ
 // 数据包生成器信息
@@ -253,6 +254,7 @@ struct tcu_statistics statistics[] = {
 void Hachiko_packet_heart_beart_notify_proc(Hachiko_EVT evt, void *private,
                             const struct Hachiko_food *self)
 {
+    //TDDebug("Hachiko_packet_heart_beart_notify_proc");
     if (evt == HACHIKO_TIMEOUT ) {
         int i = 0;
         struct can_pack_generator *thiz;
@@ -1158,6 +1160,62 @@ void *thread_tcu_read_service(void *arg) ___THREAD_ENTRY___
     return NULL;
 }
 
+
+void *thread_tcu_control(void *arg) ___THREAD_ENTRY___
+{
+    int *done = (int *)arg;
+    int mydone = 0;
+    int stop;
+    int i=0;
+    if ( done == NULL ) done = &mydone;
+    while ( ! *done){
+        usleep(5000);
+            printf("Please input tcu_stage\n  1版本校验\n  2下发参数\n  3连接确认\n  4启动充电\n  6停止充电\n  8心跳开始\n  ９对时开始\n");
+            printf(">\n");
+            scanf ("%d", &stop);
+            getchar();
+            for(i=0;i<19;i++){
+                statistics[i].can_silence = 0;
+            }
+            if(stop == 1){
+                task->tcu_stage = TCU_STAGE_CHECKVER;
+                task->tcu_tmp_stage = TCU_STAGE_CHECKVER;
+                task->tcu_heartbeat_stage  = TCU_STAGE_HEAT;//心跳
+                task->tcu_time_stage  = TCU_STAGE_TIME;//对时
+            }else if(stop == 2){
+                task->tcu_stage = TCU_STAGE_PARAMETER;
+                task->tcu_tmp_stage = TCU_STAGE_PARAMETER;
+            }else if(stop == 3){
+                task->tcu_wait_stage =TCU_STAGE_INVALID;
+                task->tcu_stage = TCU_STAGE_CONNECT;//TCU_STAGE_CONNECT;
+                task->tcu_tmp_stage = TCU_STAGE_CONNECT;//TCU_STAGE_CONNECT;
+            }else	if (stop == 4){
+                task->tcu_stage = TCU_STAGE_START;
+                task->tcu_tmp_stage = TCU_STAGE_START;
+                task->tcu_heartbeat_stage  = TCU_STAGE_HEAT;//心跳
+                task->tcu_time_stage  = TCU_STAGE_TIME;//对时
+            }else if(stop == 6){
+                task->tcu_stage = TCU_STAGE_STOP;
+                task->tcu_tmp_stage = TCU_STAGE_STOP;
+            }else if(stop ==8){
+                task->tcu_heartbeat_stage  = TCU_STAGE_HEAT;//心跳
+                task->tcu_stage = TCU_STAGE_HEAT;
+                //task->tcu_tmp_stage = TCU_STAGE_HEAT;
+            }else if(stop == 9){
+                task->tcu_time_stage  = TCU_STAGE_TIME;//对时
+                task->tcu_stage = TCU_STAGE_TIME;
+                //task->tcu_tmp_stage = TCU_STAGE_TIME;
+            }else{
+                task->tcu_stage = TCU_STAGE_ANY;
+                task->tcu_tmp_stage = TCU_STAGE_ANY;
+                printf("Please input tcu_stage\n  1版本校验\n  2下发参数\n  3连接确认\n  4启动充电\n  6停止充电\n  8心跳开始\n  ９对时开始\n");
+                printf("Sorry! input error\n\n");
+            }
+        }
+    return NULL;
+}
+
+
 //----------------------------------------------------------------------------------------------------------------------------------
 // TCU校验版本
 int gen_packet_tcu_PGN1792(struct charge_task * thiz, struct event_struct* param)
@@ -1654,57 +1712,6 @@ int analysis_data_tcu_PGN8704(struct charge_task * thiz){
 	return 0;
 }
 
-void *thread_tcu_control(void *arg) ___THREAD_ENTRY___
-{
-	int stop;
-	int i=0;
-	while (1){
-			printf("Please input tcu_stage\n  1版本校验\n  2下发参数\n  3连接确认\n  4启动充电\n  6停止充电\n  8心跳开始\n  ９对时开始\n");
-			printf(">\n");
-			scanf ("%d", &stop);
-			getchar();
-			for(i=0;i<19;i++){
-				statistics[i].can_silence = 0;
-			}
-			if(stop == 1){
-				task->tcu_stage = TCU_STAGE_CHECKVER;
-				task->tcu_tmp_stage = TCU_STAGE_CHECKVER;
-				task->tcu_heartbeat_stage  = TCU_STAGE_HEAT;//心跳
-				task->tcu_time_stage  = TCU_STAGE_TIME;//对时
-			}else if(stop == 2){
-				task->tcu_stage = TCU_STAGE_PARAMETER;
-				task->tcu_tmp_stage = TCU_STAGE_PARAMETER;
-			}else if(stop == 3){
-				task->tcu_wait_stage =TCU_STAGE_INVALID;
-				task->tcu_stage = TCU_STAGE_CONNECT;//TCU_STAGE_CONNECT;
-				task->tcu_tmp_stage = TCU_STAGE_CONNECT;//TCU_STAGE_CONNECT;
-			}else	if (stop == 4){
-				task->tcu_stage = TCU_STAGE_START;
-				task->tcu_tmp_stage = TCU_STAGE_START;
-				task->tcu_heartbeat_stage  = TCU_STAGE_HEAT;//心跳
-				task->tcu_time_stage  = TCU_STAGE_TIME;//对时
-			}else if(stop == 6){
-				task->tcu_stage = TCU_STAGE_STOP;
-				task->tcu_tmp_stage = TCU_STAGE_STOP;
-			}else if(stop ==8){
-				task->tcu_heartbeat_stage  = TCU_STAGE_HEAT;//心跳
-				task->tcu_stage = TCU_STAGE_HEAT;
-				//task->tcu_tmp_stage = TCU_STAGE_HEAT;
-			}else if(stop == 9){
-				task->tcu_time_stage  = TCU_STAGE_TIME;//对时
-				task->tcu_stage = TCU_STAGE_TIME;
-				//task->tcu_tmp_stage = TCU_STAGE_TIME;
-			}else{
-				task->tcu_stage = TCU_STAGE_ANY;
-				task->tcu_tmp_stage = TCU_STAGE_ANY;
-				printf("Please input tcu_stage\n  1版本校验\n  2下发参数\n  3连接确认\n  4启动充电\n  6停止充电\n  8心跳开始\n  ９对时开始\n");
-				printf("Sorry! input error\n\n");
-			}
-		}
-	return NULL;
-}
-
-
 
 /////////////////////////////////////////////////////
 //
@@ -1847,4 +1854,137 @@ Bcd[i] = ((temp/10)<<4) + ((temp%10) & 0x0F);
 Dec /= 100;
 }
 return 0;
+}
+
+
+
+
+/*****************************************************************************
+ 函 数 名  : bcd2str
+ 功能描述  : 将长度为len的BCD码转换为字符串
+ 输入参数  : const char* inBCD
+             char *outStr
+             INT32 len
+ 输出参数  : 无
+ 返 回 值  :
+ 调用函数  :
+ 被调函数  :
+*****************************************************************************/
+void bcd2str(const char* inBCD, char *outStr, int len)
+{
+    int i = 0,j= 0;
+    char c1 = 0,c0 = 0;
+
+    if(NULL == inBCD || NULL == outStr || len < 1)
+    {
+        return;
+    }
+
+    for(i = len - 1,j = 0; i >= 0; i--)
+    {
+        c0 = inBCD[i] & 0xF;
+        c1 = (inBCD[i] >> 4) & 0xF;
+        if(c1 >= 0 && c1 <= 9)
+        {
+           outStr[j++] = c1 + '0';
+        }
+        else
+        {
+           outStr[j++] = c1 + 'A';
+        }
+
+        if(c0 >= 0 && c0 <= 9)
+        {
+           outStr[j++] = c0 + '0';
+        }
+        else
+        {
+           outStr[j++] = c0 + 'A';
+        }
+    }
+
+}
+
+
+/* 函数实现 */
+
+/*************************************************
+Function:       str2bcd
+Description:    将长度为len的字符串pstr转为BCD码输出pbcd
+Calls:
+Called By:
+Input:1210
+
+Output:输出正序，12 10      屏蔽掉的输出逆序 10 12
+
+Return:
+Others:       pstr的长度是pbcd的二倍
+
+*************************************************/
+void str2bcd(const char *pstr, u8 *pbcd, int len)
+{
+    u8 tmpValue;
+    int i;
+    int j;
+    int m;
+    int sLen;
+
+    sLen = strlen(pstr);
+    for(i = 0; i < sLen; i++)
+    {
+        if((pstr[i] < '0')
+            ||((pstr[i] > '9') && (pstr[i] < 'A'))
+            ||((pstr[i] > 'F') && (pstr[i] < 'a'))
+            ||(pstr[i] > 'f'))
+        {
+            sLen=i;
+            break;
+        }
+    }
+
+    sLen = (sLen <= (len * 2) ) ?  sLen : sLen * 2;
+    memset((void *)pbcd, 0x00, len);
+
+    //for(i=sLen-1, j=0, m=0; (i>=0)&&(m<len); i--, j++)
+    for(i=0, j=0, m=0; (i<=sLen)&&(m<len); i++, j++)
+    {
+        if((pstr[i] >= '0') && (pstr[i] <= '9'))
+        {
+            tmpValue=pstr[i] - '0';
+        }
+        else if((pstr[i] >= 'A') && (pstr[i] <= 'F'))
+        {
+            tmpValue=pstr[i] - 'A' + 0x0A;
+        }
+        else if((pstr[i] >= 'a') && (pstr[i] <= 'f'))
+        {
+            tmpValue=pstr[i] - 'a' + 0x0A;
+        }
+        else
+        {
+            tmpValue=0;
+        }
+
+//        if((j%2)==0)
+//        {
+//            pbcd[m]=tmpValue;
+//        }
+//        else
+//        {
+//            pbcd[m++]|=(tmpValue << 4);
+//        }
+        if((j%2)==0)
+        {
+            pbcd[m]=tmpValue<<4;
+        }
+        else
+        {
+            pbcd[m++]|=(tmpValue);
+        }
+
+        if((tmpValue==0) && (pstr[i] != '0'))
+        {
+            break;
+        }
+    }
 }

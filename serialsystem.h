@@ -6,6 +6,7 @@ extern "C" {
 #endif
 
 int tcu_canbus();
+void tcu_canstop();
 
 #endif /*_TOM_IS_A_FOOL_*/
 

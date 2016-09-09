@@ -18,6 +18,11 @@
 #include "log.h"
 #include "Hachiko.h"
 
+pthread_t tid_read = 0;
+pthread_t tid_write = 0;
+pthread_t tid_control = 0;
+pthread_attr_t attr;
+
 extern void * thread_tcu_write_service(void *) ___THREAD_ENTRY___;
 extern void * thread_tcu_read_service(void *) ___THREAD_ENTRY___;
 extern void * thread_tcu_control(void *) ___THREAD_ENTRY___;
@@ -25,8 +30,8 @@ extern void * thread_tcu_control(void *) ___THREAD_ENTRY___;
 #if 1
 int tcu_canbus()
 {
-    pthread_t tid = 0;
-    pthread_attr_t attr;
+    //pthread_t tid = 0;
+    //pthread_attr_t attr;
     int s;
     int thread_done[ 8 ] = {0};
     int errcode = 0, ret;
@@ -63,7 +68,7 @@ int tcu_canbus()
 
 #if 1
     // TCU 数据包写线程，从队列中取出要写的数据包并通过CAN总线发送出去
-    ret = pthread_create( & tid, &attr, thread_tcu_write_service,
+    ret = pthread_create( & tid_write, &attr, thread_tcu_write_service,
                           &thread_done[1]);
     if ( 0 != ret ) {
         errcode  = 0x1001;
@@ -75,7 +80,7 @@ int tcu_canbus()
 #endif
 #if 1
     // TCU数据包读线程，从CAN总线读取数据包后将数据存入读入数据队列等待处理
-    ret = pthread_create( & tid, &attr, thread_tcu_read_service,
+    ret = pthread_create( & tid_read, &attr, thread_tcu_read_service,
                           &thread_done[2]);
     if ( 0 != ret ) {
         errcode  = 0x1002;
@@ -90,7 +95,7 @@ int tcu_canbus()
     ret = pthread_create( & tid, &attr, thread_tcu_heartbeat_service,
                           &thread_done[3]);
     if ( 0 != ret ) {
-        errcode  = 0x1002;
+        errcode  = 0x1004;
         log_printf(ERR,
                    "CAN-BUS writer start up.                       FAILE!!!!");
         goto die;
@@ -100,10 +105,10 @@ int tcu_canbus()
 
 #if 1
     //
-    ret = pthread_create( & tid, &attr, thread_tcu_control,
+    ret = pthread_create( & tid_control, &attr, thread_tcu_control,
                           &thread_done[3]);
     if ( 0 != ret ) {
-        errcode  = 0x1002;
+        errcode  = 0x1003;
         log_printf(ERR,
                    "CAN-BUS writer start up.                       FAILE!!!!");
         goto die;
@@ -124,3 +129,28 @@ die:
     return errcode;
 }
 #endif
+
+void tcu_canstop()
+{
+    int res;
+    printf("11111111\n");
+    pthread_attr_destroy(&attr);
+printf("22222222222\n");
+    res = pthread_cancel(tid_write);
+    printf("333333333333\n");
+    if (res != 0){
+        perror("Thread cancel tid_write failed");
+    }
+
+    res = pthread_cancel(tid_read);
+    printf("4444444444444\n");
+    if (res != 0){
+        perror("Thread cancel tid_read failed");
+    }
+
+//    res = pthread_cancel(tid_control);
+//    printf("5555555555555\n");
+//    if (res != 0){
+//        perror("Thread cancel tid_control failed");
+//    }
+}
