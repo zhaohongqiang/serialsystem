@@ -376,7 +376,7 @@ static int can_packet_callback(
     switch ( ev ) {
     case EVENT_CAN_TIME:
     	log_printf(INF, "TCU: CHARGER now stage to "RED("TCU_STAGE_TIME"));
-		thiz->tcu_time_stage = TCU_STAGE_TIME;
+        thiz->tcu_time_stage = TCU_STAGE_TIME;
 		thiz->tcu_stage = TCU_STAGE_TIME;
     	break;
     case EVENT_CAN_HEART:
@@ -384,7 +384,7 @@ static int can_packet_callback(
         //thiz->tcu_heartbeat.Hachiko_notify_proc=
         //		Hachiko_packet_tcu_heart_beart_notify_proc;
 		log_printf(INF, "TCU: CHARGER now stage to "RED("TCU_STAGE_HEAT"));
-		thiz->tcu_heartbeat_stage = TCU_STAGE_HEAT;
+        thiz->tcu_heartbeat_stage = TCU_STAGE_HEAT;
 		thiz->tcu_stage = TCU_STAGE_HEAT;
     	break;
     case EVENT_CAN_INIT:
@@ -602,7 +602,7 @@ int about_packet_reciev_done(struct charge_task *thiz,
 			thiz->tcu_tmp_stage = TCU_STAGE_PARAMETER;
 			log_printf(INF, "TCU: TCU change stage to "RED("TCU_STAGE_PARAMETER"));
 			recv_data_tcu_PGN2048(thiz,param);
-            analysis_data_tcu_PGN2048(thiz);
+            //analysis_data_tcu_PGN2048(thiz);
 		}
         break;
     case PGN_CRCP:
@@ -614,7 +614,7 @@ int about_packet_reciev_done(struct charge_task *thiz,
 		 if ( thiz->tcu_stage == TCU_STAGE_PARAMETER) {
 			//thiz->charge_stage = TCU_STAGE_CONNECT;
 			 recv_data_tcu_PGN2560(thiz,param);
-             analysis_data_tcu_PGN2560(thiz);
+             //analysis_data_tcu_PGN2560(thiz);
 			log_printf(INF, "TCU: TCU now stage to "RED("TCU_STAGE_PARAMETER"));
 			//thiz->tcu_wait_stage =TCU_STAGE_ANY;
 		}
@@ -646,7 +646,7 @@ int about_packet_reciev_done(struct charge_task *thiz,
 		 if ( thiz->tcu_stage == TCU_STAGE_START) {
 			//thiz->charge_stage = TCU_STAGE_STATUS;
 			 recv_data_tcu_PGN512(thiz,param);
-             analysis_data_tcu_PGN512(thiz);
+             //analysis_data_tcu_PGN512(thiz);
 			log_printf(INF, "TCU: TCU now stage to "RED("TCU_STAGE_START"));
 		}
     	break;
@@ -1168,7 +1168,8 @@ void *thread_tcu_control(void *arg) ___THREAD_ENTRY___
     int stop;
     int i=0;
     if ( done == NULL ) done = &mydone;
-    while ( ! *done){
+    /*while ( ! *done)*/
+    while(1){
         usleep(5000);
             printf("Please input tcu_stage\n  1版本校验\n  2下发参数\n  3连接确认\n  4启动充电\n  6停止充电\n  8心跳开始\n  ９对时开始\n");
             printf(">\n");
@@ -1276,8 +1277,8 @@ int gen_packet_tcu_PGN2304(struct charge_task * thiz, struct event_struct* param
     param->buff.tx_buff[2] = 0x00;
     param->buff.tx_buff[3] = 0x00;
     param->buff.tx_buff[4] = '1';
-    param->buff.tx_buff[5] = '1';
-    param->buff.tx_buff[6] = '1';
+    param->buff.tx_buff[5] = '2';
+    param->buff.tx_buff[6] = '3';
 
     memset(&thiz->tcp_info, 0xFF, sizeof(struct pgn2304_TCP));
 	thiz->tcp_info.spn2304_charger_sn[0] = 0x00;
@@ -1285,8 +1286,8 @@ int gen_packet_tcu_PGN2304(struct charge_task * thiz, struct event_struct* param
 	thiz->tcp_info.spn2304_charger_sn[2] = 0x00;
 	thiz->tcp_info.spn2304_charger_sn[3] = 0x00;
 	thiz->tcp_info.spn2304_charger_region_code[0] = '1';
-	thiz->tcp_info.spn2304_charger_region_code[1] = '1';
-	thiz->tcp_info.spn2304_charger_region_code[2] = '1';
+    thiz->tcp_info.spn2304_charger_region_code[1] = '2';
+    thiz->tcp_info.spn2304_charger_region_code[2] = '3';
     //set_data_tcu_PGN2304(thiz);
 	//memcpy(param->buff.tx_buff, &thiz->tcp_info, sizeof(struct pgn2304_TCP));
 
@@ -1305,8 +1306,8 @@ int set_data_tcu_PGN2304(struct charge_task * thiz){
 	thiz->tcp_info.spn2304_charger_sn[2] = 0x00;
 	thiz->tcp_info.spn2304_charger_sn[3] = 0x00;
 	thiz->tcp_info.spn2304_charger_region_code[0] = '1';
-	thiz->tcp_info.spn2304_charger_region_code[1] = '1';
-	thiz->tcp_info.spn2304_charger_region_code[2] = '1';
+    thiz->tcp_info.spn2304_charger_region_code[1] = '2';
+    thiz->tcp_info.spn2304_charger_region_code[2] = '3';
 	return 0;
 }
 
@@ -1400,7 +1401,7 @@ int gen_packet_tcu_PGN1280(struct charge_task * thiz, struct event_struct* param
 	//printf("tz_dsttime:%d\n",tz.tz_dsttime);
 
 	p = localtime(&tv.tv_sec);
-	printf("time_now:%4d年%02d月%02d日 星期%d %02d:%02d:%02d.%ld\n", 1900+p->tm_year, 1+p->tm_mon, p->tm_mday, ( (p->tm_wday==0)  ? 7 : (p->tm_wday) ),p->tm_hour, p->tm_min, p->tm_sec, tv.tv_usec);
+    //printf("time_now:%4d年%02d月%02d日 星期%d %02d:%02d:%02d.%ld\n", 1900+p->tm_year, 1+p->tm_mon, p->tm_mday, ( (p->tm_wday==0)  ? 7 : (p->tm_wday) ),p->tm_hour, p->tm_min, p->tm_sec, tv.tv_usec);
 
 	memset(&thiz->tts_info, 0xFF, sizeof(struct pgn1280_TTS));
     thiz->tts_info.spn1280_Immediately = 0;
