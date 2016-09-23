@@ -227,9 +227,9 @@ struct pgn8448_CRF{//Charging遥信帧
 };
 struct pgn8704_CTF{//Charging遥测帧
 		u8 spn8704_port;//0-255
-		u8  spn8704_out_vol;//输出电压    精确到小数点后1位0V - 450V
-		u8  spn8704_out_cur;//输出电流   精确到小数点后2位0A - 70A
-		u8  spn8704_guid_vol;//导引电压  精确到小数点后2位0A - 12V
+        u8  spn8704_out_vol[2];//输出电压    精确到小数点后1位0V - 450V
+        u8  spn8704_out_cur[2];//输出电流   精确到小数点后2位0A - 70A
+        u8  spn8704_guid_vol[2];//导引电压  精确到小数点后2位0A - 12V
 };
 struct pgn12544_THB{//TCU心跳帧
 		u8 spn12544_port;//0-255

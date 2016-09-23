@@ -627,7 +627,7 @@ int about_packet_reciev_done(struct charge_task *thiz,
     case PGN_CCT:
     	statistics[I_CCT].can_counter ++;
 		statistics[I_CCT].can_silence = 0;
-		//log_printf(INF, "TCU: TCU  now  "GRN("PGN_CCT  0x001500    PGN_5376  Charging连接确认 connect"));
+        log_printf(INF, "TCU: TCU  now  "GRN("PGN_CCT  0x001500    PGN_5376  Charging连接确认 connect"));
 		//printf("now stage ====%d \n", thiz->tcu_stage);
 		//thiz->tcu_cct_stage = TCU_STAGE_CONNECT;
 		 if ( thiz->tcu_stage == TCU_STAGE_PARAMETER) {
@@ -1704,13 +1704,110 @@ int analysis_data_tcu_PGN5376(struct charge_task * thiz){
 }
 
 int analysis_data_tcu_PGN8448(struct charge_task * thiz){
+    if(0x00 == atoi(thiz->crf_info.spn8448_status)){
+        log_printf(INF, "TCU: TCU  "GRN("待机"));
+    }else if(0x01 == atoi(thiz->crf_info.spn8448_status)){
+        log_printf(INF, "TCU: TCU  "GRN("工作"));
+    }else if(0x02 == atoi(thiz->crf_info.spn8448_status)){
+        log_printf(INF, "TCU: TCU  "GRN("充满"));
+    }else if(0x03 == atoi(thiz->crf_info.spn8448_status)){
+        log_printf(INF, "TCU: TCU  "GRN("告警"));
+    }else if(0x04 == atoi(thiz->crf_info.spn8448_status)){
+        log_printf(INF, "TCU: TCU  "GRN("故障"));
+    }
+
+    if(0 == thiz->crf_info.connect_confirm_switch_status){
+        log_printf(INF, "TCU: TCU  "GRN("连接"));
+    }else{
+        log_printf(INF, "TCU: TCU  "GRN("未连接"));
+    }
+
+    if(0 == thiz->crf_info.emergency_stop){
+        log_printf(INF, "TCU: TCU  "GRN("急停按钮正常"));
+    }else{
+        log_printf(INF, "TCU: TCU  "GRN("急停按钮异常"));
+    }
+
+    if(0 == thiz->crf_info.arrester_fault){
+        log_printf(INF, "TCU: TCU  "GRN("避雷器正常"));
+    }else{
+        log_printf(INF, "TCU: TCU  "GRN("避雷器异常"));
+    }
+
+    if(0 == thiz->crf_info.gun_fault){
+        log_printf(INF, "TCU: TCU  "GRN("充电枪正常"));
+    }else{
+        log_printf(INF, "TCU: TCU  "GRN("充电枪异常"));
+    }
+
+    if(0 == thiz->crf_info.Over_temperature_fault){
+        log_printf(INF, "TCU: TCU  "GRN("过温正常"));
+    }else{
+        log_printf(INF, "TCU: TCU  "GRN("过温异常"));
+    }
+
+    if(0 == thiz->crf_info.Over_temperature_fault){
+        log_printf(INF, "TCU: TCU  "GRN("过温正常"));
+    }else{
+        log_printf(INF, "TCU: TCU  "GRN("过温异常"));
+    }
+
+    if(0 == thiz->crf_info.Over_temperature_fault){
+        log_printf(INF, "TCU: TCU  "GRN("过温正常"));
+    }else{
+        log_printf(INF, "TCU: TCU  "GRN("过温异常"));
+    }
+
+    if(0 == thiz->crf_info.In_vol_over){
+        log_printf(INF, "TCU: TCU  "GRN("输入电压过压"));
+    }else{
+        log_printf(INF, "TCU: TCU  "GRN("输入电压过压"));
+    }
+
+    if(0 == thiz->crf_info.In_vol_under){
+        log_printf(INF, "TCU: TCU  "GRN("输入电压欠压"));
+    }else{
+        log_printf(INF, "TCU: TCU  "GRN("输入电压欠压"));
+    }
+
+    if(0 == thiz->crf_info.Out_contactor_status){
+        log_printf(INF, "TCU: TCU  "GRN("接触器分断"));
+    }else{
+        log_printf(INF, "TCU: TCU  "GRN("接触器闭合"));
+    }
+
+    if(0 == thiz->crf_info.Vehicle_control_guid_alarm){
+        log_printf(INF, "TCU: TCU  "GRN("车辆控制导引告警"));
+    }else{
+        log_printf(INF, "TCU: TCU  "GRN("车辆控制导引告警"));
+    }
+
+    if(0 == thiz->crf_info.AC_contactor_fault){
+        log_printf(INF, "TCU: TCU  "GRN("交流接触器"));
+    }else{
+        log_printf(INF, "TCU: TCU  "GRN("交流接触器"));
+    }
+
+    if(0 == thiz->crf_info.Out_over_current){
+        log_printf(INF, "TCU: TCU  "GRN("输出过流"));
+    }else{
+        log_printf(INF, "TCU: TCU  "GRN("输出过流"));
+    }
+
+    if(0 == thiz->crf_info.Out_over_current_protection_action){
+        log_printf(INF, "TCU: TCU  "GRN("输出过流保护动作"));
+    }else{
+        log_printf(INF, "TCU: TCU  "GRN("输出过流保护动作"));
+    }
+
 
 	return 0;
 }
 
 int analysis_data_tcu_PGN8704(struct charge_task * thiz){
+    //thiz->ctf_info.spn8704_out_cur
 
-	return 0;
+    return 0;
 }
 
 

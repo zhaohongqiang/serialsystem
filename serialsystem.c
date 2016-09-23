@@ -103,7 +103,7 @@ int tcu_canbus()
     log_printf(INF, "CAN-BUS heartbeatt start up.                           DONE.");
 #endif
 
-#if 1
+#if 0
     //
     ret = pthread_create( & tid_control, &attr, thread_tcu_control,
                           &thread_done[3]);
