@@ -40,31 +40,41 @@ extern "C" {
 
 // TCU与Charging交互阶段定义
 typedef enum {
-    TCU_STAGE_INVALID      		=0x00,     // TCU状态无效，可能是在初始化或者析构
+    TCU_STAGE_INVALID               =0x00,     // TCU状态无效，可能是在初始化或者析构
     TCU_STAGE_CHECKVER      	=0x01,//版本校验
     TCU_STAGE_PARAMETER   	=0x02,//下发参数
-    TCU_STAGE_CONNECT     	=0x03,//连接确认应答
-    TCU_STAGE_START         		=0x04,// 启动充电
-    TCU_STAGE_STATUS              =0X05,//启动状态完成ｏｒ失败
-    TCU_STAGE_STOP      			=0X06,//停止充电
-    TCU_STAGE_STOP_STATUS =0X07,//停止充电完成
-    TCU_STAGE_HEAT					=0X08,//心跳
-    TCU_STAGE_TIME					=0X09,//对时
-    TCU_STAGE_ANY        			=0x0A // 任意阶段
+    TCU_STAGE_WAITCONNECT     	=0x03,//等待连接确认
+    TCU_STAGE_CONNECT            =0x04,//连接确认应答
+    TCU_STAGE_WAITSTART         =0x05,// 等待启动充电
+    TCU_STAGE_START                   =0X06,// 启动充电
+    TCU_STAGE_STARTING            =0X07,//启动充电...
+    TCU_STAGE_STATUS                 =0X08,//启动状态完成ｏｒ失败
+    TCU_STAGE_CHARGING          =0X09,//充电中...
+    TCU_STAGE_STOP                     =0X0A,//停止充电
+    TCU_STAGE_STOP_STATUS    =0X0B,//停止充电...
+    TCU_STAGE_STOP_END          =0X0C,//停止充电完成
+    TCU_STAGE_HEAT                     =0X0D,//心跳
+    TCU_STAGE_TIME					     =0x0E,//对时
+    TCU_STAGE_ANY        			     =0x0F // 任意阶段
 }TCU_STAGE;
 
 typedef enum {
     TCU_ERR_STAGE_INVALID      		=0x00,     // TCU状态无效，可能是在初始化或者析构
     TCU_ERR_STAGE_CHECKVER      	=0x01,//版本校验
     TCU_ERR_STAGE_PARAMETER   	=0x02,//下发参数
-    TCU_ERR_STAGE_CONNECT     	=0x03,//连接确认应答
-    TCU_ERR_STAGE_START         		=0x04,// 启动充电
-    TCU_ERR_STAGE_STATUS              =0X05,//启动状态完成ｏｒ失败
-    TCU_ERR_STAGE_STOP      			=0X06,//停止充电
-    TCU_ERR_STAGE_STOP_STATUS =0X07,//停止充电完成
-    TCU_ERR_STAGE_HEAT					=0X08,//心跳
-    TCU_ERR_STAGE_TIME					=0X09,//对时
-    TCU_ERR_STAGE_ANY        			=0x0A // 任意阶段
+    TCU_ERR_STAGE_WAITCONNECT     	=0x03,//等待连接确认
+    TCU_ERR_STAGE_CONNECT     	=0x04,//连接确认应答
+    TCU_ERR_STAGE_WAITSTART      =0x05,// 等待启动充电
+    TCU_ERR_STAGE_START         		=0X06,// 启动充电
+    TCU_ERR_STAGE_STARTING         =0X07,//启动充电...
+    TCU_ERR_STAGE_STATUS              =0X08,//启动状态完成ｏｒ失败
+    TCU_ERR_STAGE_CHARGING        =0X09,//充电中...
+    TCU_ERR_STAGE_STOP      			    =0X0A,//停止充电
+    TCU_ERR_STAGE_STOP_STATUS =0X0B,//停止充电...
+    TCU_ERR_STAGE_STOP_END       =0x0C,//停止充电完成
+    TCU_ERR_STAGE_HEAT					=0X0D,//心跳
+    TCU_ERR_STAGE_TIME					=0X0E,//对时
+    TCU_ERR_STAGE_ANY        			    =0x0F // 任意阶段
 }TCU_ERR_STAGE;
 
 // TCU 状态定义
