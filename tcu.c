@@ -24,11 +24,10 @@
 #define ANALYSIS_ON
 //#undef ANALYSIS_ON
 
-
+#if 1
 //计费控制单元ＴＣＵ　　　充电机Ｃ
 // 数据包生成器信息
 struct can_pack_generator generator[] = {
-
 	{//充电启动   4   pgn256   0
 	.stage      =  TCU_STAGE_START,
 	.pgn        =  0x00100,
@@ -229,6 +228,8 @@ struct tcu_statistics statistics[] = {
     .can_counter = 0
     }
    };
+#endif
+
 //void Hachiko_packet_tcu_heart_beart_notify_proc(Hachiko_EVT evt, void *private,
 //                            const struct Hachiko_food *self)
 //{
@@ -300,22 +301,35 @@ void Hachiko_packet_heart_beart_notify_proc(Hachiko_EVT evt, void *private,
          * 当can_silence 计数大于等于 can_tolerate_silence 时认为对应数据包接收超时，需要在BMS逻辑主线程
          * 中做相应处理.
          *
-         * BEM和CEM不在超时统计范围内
+         * "连接确认"停机状态确认"和"启动状态成功or失败"不在超时统计范围内
          */
-#if 0
+#if 1
         for ( i = 0;
               (unsigned int)i < (sizeof(statistics) / sizeof(struct tcu_statistics) ) - 2; i++ ) {
             me = &statistics[i];
             if ( generator[i].stage == task->tcu_stage ){
-            	me->can_silence += 1;
-            }else if( generator[i].stage == 0x08 ){
+                me->can_silence += 1;
+            }/*else if( generator[i].stage == TCU_STAGE_HEAT ){
             	me->can_silence += 1;//屏蔽心跳超时
             	//me->can_silence = 0;
-            } else if( generator[i].stage == 0x09 ){
+            } else if( generator[i].stage == TCU_STAGE_TIME ){
             	me->can_silence += 1;//屏蔽对时超时
             	//me->can_silence = 0;
+            }else if( generator[i].stage == TCU_STAGE_CONNECT ){
+                me->can_silence += 1;//屏蔽超时
+                //me->can_silence = 0;
             }else{
-            	me->can_silence = 0;
+                me->can_silence = 0;
+            }*/
+            if(generator[i].stage == task->tcu_stage){
+                switch (task->tcu_err_stage) {
+                    case TCU_ERR_STAGE_CHECKVER:
+                        printf("tcu_err_stage   statistics[I_TCV].can_silence==%d  i ===%d\n",statistics[I_TCV].can_silence,i);
+                        statistics[I_TCV].can_silence = 0;//重新计时
+                        me->can_silence = 0;
+                        task->tcu_err_stage = TCU_ERR_STAGE_INVALID;
+                        break;
+                }
             }
             if ( me->can_tolerate_silence < me->can_silence ) {
                 switch (task->tcu_stage) {
@@ -329,39 +343,40 @@ void Hachiko_packet_heart_beart_notify_proc(Hachiko_EVT evt, void *private,
                 	break;
                 case TCU_STAGE_CHECKVER:
                    // if (me->can_pgn != PGN_CRCV) break;
-					log_printf(WRN, "TCU: check_version "RED("timeout"));
-					//task->tcu_stage = TCU_STAGE_CHECKVER;
-					//task->tcu_tmp_stage = TCU_STAGE_CHECKVER;
-					task->tcu_stage = TCU_STAGE_ANY;
-					task->tcu_tmp_stage = TCU_STAGE_ANY;
+                    log_printf(WRN, "TCU: check_version "RED("timeout"));
+                    task->tcu_stage = TCU_STAGE_TIMEOUT;
+                    task->tcu_tmp_stage = TCU_STAGE_TIMEOUT;
+                    task->tcu_err_stage = (TCU_ERR_STAGE_TIMEOUT | TCU_ERR_STAGE_CHECKVER) ;
                     break;
                 case TCU_STAGE_PARAMETER:
                    // if (me->can_pgn != PGN_CRCP) break;
-					log_printf(WRN, "TCU: change parameter "RED("timeout"));
-					//task->tcu_stage = TCU_STAGE_PARAMETER;
-					//task->tcu_tmp_stage = TCU_STAGE_PARAMETER;
-					task->tcu_stage = TCU_STAGE_ANY;
-					task->tcu_tmp_stage = TCU_STAGE_ANY;
+                    log_printf(WRN, "TCU: change parameter "RED("timeout"));
+                    task->tcu_stage = TCU_STAGE_TIMEOUT;
+                    task->tcu_tmp_stage = TCU_STAGE_TIMEOUT;
+                    task->tcu_err_stage = (TCU_ERR_STAGE_TIMEOUT | TCU_ERR_STAGE_PARAMETER) ;
                     break;
                 case TCU_STAGE_START:
                    // if (me->can_pgn != PGN_CRTR) break;
-					log_printf(WRN, "TCU: start charging "RED("timeout"));
+                    log_printf(WRN, "TCU: start charging "RED("timeout"));
+                    //me->can_silence = 0;
 					//task->tcu_stage = TCU_STAGE_START;
-					task->tcu_stage = TCU_STAGE_ANY;
-					task->tcu_tmp_stage = TCU_STAGE_ANY;
+//					task->tcu_stage = TCU_STAGE_ANY;
+//					task->tcu_tmp_stage = TCU_STAGE_ANY;
                     break;
                 case TCU_STAGE_STOP:
                     //if (me->can_pgn != PGN_CRST) break;
-					log_printf(WRN, "TCU: stop charging "RED("timeout"));
+                    log_printf(WRN, "TCU: stop charging "RED("timeout"));
+                    //me->can_silence = 0;
 					//task->tcu_stage = TCU_STAGE_STOP;
-					task->tcu_stage = TCU_STAGE_ANY;
-					task->tcu_tmp_stage = TCU_STAGE_ANY;
+//					task->tcu_stage = TCU_STAGE_ANY;
+//					task->tcu_tmp_stage = TCU_STAGE_ANY;
 					break;
-                default:
-					task->tcu_stage = TCU_STAGE_ANY;
-					task->tcu_tmp_stage = TCU_STAGE_ANY;
-                    break;
+//                default:
+//					task->tcu_stage = TCU_STAGE_ANY;
+//					task->tcu_tmp_stage = TCU_STAGE_ANY;
+//                    break;
                 }
+                me->can_silence = 0;//重新计时
             }
         }
 #endif
@@ -667,7 +682,8 @@ int about_packet_reciev_done(struct charge_task *thiz,
              log_printf(INF, "TCU: TCU now stage to "YEL("TCU_STAGE_START"));
 			 recv_data_tcu_PGN512(thiz,param);
 #ifndef ANALYSIS_ON
-             //thiz->tcu_stage = TCU_STAGE_STARTING;
+             thiz->tcu_stage = TCU_STAGE_STARTING;
+            thiz->tcu_tmp_stage = TCU_STAGE_STARTING;
             log_printf(INF, "TCU: TCU change stage to "RED("TCU_STAGE_STARTING"));
 #else
              analysis_data_tcu_PGN512(thiz);
@@ -1371,7 +1387,7 @@ int gen_packet_tcu_PGN256(struct charge_task * thiz, struct event_struct* param)
     param->can_id = gen->prioriy << 26 | gen->pgn << 8 | CAN_TX_ID_MASK | CAN_EFF_FLAG;
     param->evt_param = EVT_RET_OK;
     statistics[I_TRC].can_counter ++;
-
+    //statistics[I_TRC].can_silence = 0;
     return 0;
 }
 

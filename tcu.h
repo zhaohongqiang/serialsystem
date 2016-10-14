@@ -55,7 +55,8 @@ typedef enum {
     TCU_STAGE_STOP_END          =0X0C,//停止充电完成
     TCU_STAGE_HEAT                     =0X0D,//心跳
     TCU_STAGE_TIME					     =0x0E,//对时
-    TCU_STAGE_ANY        			     =0x0F // 任意阶段
+    TCU_STAGE_ANY        			     =0x0F, // 任意阶段
+    TCU_STAGE_TIMEOUT             =0x10 // 超时
 }TCU_STAGE;
 
 typedef enum {
@@ -74,7 +75,8 @@ typedef enum {
     TCU_ERR_STAGE_STOP_END       =0x0C,//停止充电完成
     TCU_ERR_STAGE_HEAT					=0X0D,//心跳
     TCU_ERR_STAGE_TIME					=0X0E,//对时
-    TCU_ERR_STAGE_ANY        			    =0x0F // 任意阶段
+    TCU_ERR_STAGE_ANY        			    =0x0F, // 任意阶段
+    TCU_ERR_STAGE_TIMEOUT          =0x10 // 超时
 }TCU_ERR_STAGE;
 
 // TCU 状态定义
@@ -114,7 +116,7 @@ typedef enum {
     CAN_TP_ABRT= 0x60
 }CAN_TP_STATUS;
 
-struct can_pack_generator;
+//struct can_pack_generator;
 // 通信报文生成依据
 struct can_pack_generator {
     // 所属阶段
@@ -510,8 +512,8 @@ struct charge_task {
 
     struct pgn1792_TCV  tcv_info;//TCU版本
     struct pgn2304_TCP  tcp_info;//下发参数
-    struct pgn256_TRC trc_info;////启动充电
-    struct pgn768_TST tst_info;////停止充电
+    struct pgn256_TRC trc_info;//启动充电
+    struct pgn768_TST tst_info;//停止充电
     struct pgn1280_TTS  tts_info;//下发对时
     struct pgn12544_THB  thb_info;//心跳
     struct pgn4608_TRSF trsf_info;//启动完成应答

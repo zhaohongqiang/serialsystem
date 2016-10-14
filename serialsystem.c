@@ -17,6 +17,7 @@
 #include "error.h"
 #include "log.h"
 #include "Hachiko.h"
+#include "global.h"
 
 pthread_t tid_read = 0;
 pthread_t tid_write = 0;
@@ -147,7 +148,6 @@ printf("22222222222\n");
     if (res != 0){
         perror("Thread cancel tid_read failed");
     }
-
 //    res = pthread_cancel(tid_control);
 //    printf("5555555555555\n");
 //    if (res != 0){
