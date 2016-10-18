@@ -116,6 +116,29 @@ typedef enum {
     CAN_TP_ABRT= 0x60
 }CAN_TP_STATUS;
 
+typedef enum {
+     SPN8448_STATUS_0 = 0,
+     SPN8448_STATUS_1,
+     SPN8448_STATUS_2,
+     SPN8448_STATUS_3,//工作状态  0000-待机0001-工作 0010-充满 0011-告警0100故障
+     CONNECT_SWITCH_STATUS,//连接确认开关状态 布尔型, 0连接，1未连接
+     EMERGENCY_STOP,//急停动作告警  布尔型, 0正常，1异常
+     ARRESTER_FAULT,//避雷器故障  布尔型, 0正常，1异常
+     GUN_FAULT//充电枪未归位  布尔型, 0正常，1异常
+}CAN_CRF_STATUS;
+
+typedef enum {
+     OVER_TEM_FAULT = 0,//过温故障  布尔型, 0正常，1异常
+     IN_VOL_OVER,//输入电压过压  布尔型, 0正常，1异常
+     IN_VOL_UNDER,//输入电压欠压  布尔型, 0正常，1异常
+     OUT_CONTACTOR_STATUS,//输出接触器状态  布尔型, 0分断，1闭合
+     VEHICLE_CONTROL_GUID_ALARM,//充电中车辆控制导引告警  布尔型, 0正常，1异常
+     AC_CONTACTOR_FAULT,//交流接触器故障  布尔型, 0正常，1异常
+     OUT_OVER_CURRENT,//输出过流告警  布尔型, 0正常，1保护
+     OUT_OVER_CURRENT_PROTECTION_ACTION//输出过流保护动作  布尔型, 0正常，1异常
+}CAN_CRF_OTHER_STATUS;
+
+
 //struct can_pack_generator;
 // 通信报文生成依据
 struct can_pack_generator {
@@ -222,11 +245,16 @@ struct pgn5632_TRCT{//TCU应答连接确认
 };
 struct pgn8448_CRF{//Charging遥信帧
 		u8 spn8448_port;//0-255
-        char spn8448_status[4];//工作状态  0000-待机0001-工作 0010-充满 0011-告警0100故障
+#if 0
+        u8 spn8448_status_0;
+        u8 spn8448_status_1;
+        u8 spn8448_status_2;
+        u8 spn8448_status_3;//工作状态  0000-待机0001-工作 0010-充满 0011-告警0100故障
 		u8 connect_confirm_switch_status;//连接确认开关状态 布尔型, 0连接，1未连接
 		u8 emergency_stop;//急停动作告警  布尔型, 0正常，1异常
 		u8 arrester_fault;//避雷器故障  布尔型, 0正常，1异常
 		u8 gun_fault;//充电枪未归位  布尔型, 0正常，1异常
+
 		u8 Over_temperature_fault;//过温故障  布尔型, 0正常，1异常
 		u8 In_vol_over;//输入电压过压  布尔型, 0正常，1异常
 		u8 In_vol_under;//输入电压欠压  布尔型, 0正常，1异常
@@ -235,6 +263,10 @@ struct pgn8448_CRF{//Charging遥信帧
 		u8 AC_contactor_fault;//交流接触器故障  布尔型, 0正常，1异常
 		u8 Out_over_current;//输出过流告警  布尔型, 0正常，1保护
 		u8 Out_over_current_protection_action;//输出过流保护动作  布尔型, 0正常，1异常
+#endif
+        u8 spn8448_status;
+        u8 spn8448_otherstatus;
+        u8 Not_use[3];//
 		u8 Other_faults[2];//其它类型故障  充电机私有告警和故障信息，第1个八位组为告警信息编号，第2个八位组为告警信息值（布尔型, 变化上传；0正常，1异常）
 };
 struct pgn8704_CTF{//Charging遥测帧

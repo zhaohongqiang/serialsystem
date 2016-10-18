@@ -22,7 +22,10 @@
 
 
 #define ANALYSIS_ON
-//#undef ANALYSIS_ON
+#undef ANALYSIS_ON
+
+#define SET_DATA
+//#undef SET_DATA
 
 #if 1
 //计费控制单元ＴＣＵ　　　充电机Ｃ
@@ -329,6 +332,11 @@ void Hachiko_packet_heart_beart_notify_proc(Hachiko_EVT evt, void *private,
                         me->can_silence = 0;
                         task->tcu_err_stage = TCU_ERR_STAGE_INVALID;
                         break;
+                    case TCU_ERR_STAGE_PARAMETER:
+                        statistics[I_TCP].can_silence = 0;//重新计时
+                        me->can_silence = 0;
+                        task->tcu_err_stage = TCU_ERR_STAGE_INVALID;
+                        break;
                 }
             }
             if ( me->can_tolerate_silence < me->can_silence ) {
@@ -358,18 +366,16 @@ void Hachiko_packet_heart_beart_notify_proc(Hachiko_EVT evt, void *private,
                 case TCU_STAGE_START:
                    // if (me->can_pgn != PGN_CRTR) break;
                     log_printf(WRN, "TCU: start charging "RED("timeout"));
-                    //me->can_silence = 0;
-					//task->tcu_stage = TCU_STAGE_START;
-//					task->tcu_stage = TCU_STAGE_ANY;
-//					task->tcu_tmp_stage = TCU_STAGE_ANY;
+                    task->tcu_stage = TCU_STAGE_TIMEOUT;
+                    task->tcu_tmp_stage = TCU_STAGE_TIMEOUT;
+                    task->tcu_err_stage = (TCU_ERR_STAGE_TIMEOUT | TCU_ERR_STAGE_START) ;
                     break;
                 case TCU_STAGE_STOP:
                     //if (me->can_pgn != PGN_CRST) break;
                     log_printf(WRN, "TCU: stop charging "RED("timeout"));
-                    //me->can_silence = 0;
-					//task->tcu_stage = TCU_STAGE_STOP;
-//					task->tcu_stage = TCU_STAGE_ANY;
-//					task->tcu_tmp_stage = TCU_STAGE_ANY;
+                    task->tcu_stage = TCU_STAGE_TIMEOUT;
+                    task->tcu_tmp_stage = TCU_STAGE_TIMEOUT;
+                    task->tcu_err_stage = (TCU_ERR_STAGE_TIMEOUT | TCU_ERR_STAGE_STOP) ;
 					break;
 //                default:
 //					task->tcu_stage = TCU_STAGE_ANY;
@@ -754,12 +760,18 @@ int about_packet_reciev_done(struct charge_task *thiz,
 		statistics[I_CRF].can_silence = 0;
 		log_printf(INF, "TCU: TCU  now  "GRN("PGN_CRF 0x002100 PGN_8448  Charging遥信帧 remote frame"));
 		recv_data_tcu_PGN8448(thiz,param);
+#ifndef ANALYSIS_ON
+        analysis_data_tcu_PGN8448(thiz);
+#endif
     	break;
     case PGN_CTF:
     	statistics[I_CTF].can_counter ++;
 		statistics[I_CTF].can_silence = 0;
 		log_printf(INF, "TCU: TCU  now  "GRN("PGN_CTF 0x002200  PGN_8704  Charging遥测帧  telemetry frame"));
 		recv_data_tcu_PGN8704(thiz,param);
+#ifndef ANALYSIS_ON
+        analysis_data_tcu_PGN8704(thiz);
+#endif
     	break;
     default:
         log_printf(WRN, "TCU: un-recognized PGN %08X",
@@ -1789,6 +1801,95 @@ int analysis_data_tcu_PGN5376(struct charge_task * thiz){
 }
 
 int analysis_data_tcu_PGN8448(struct charge_task * thiz){
+    log_printf(INF, "TCU: TCU  "GRN("analysis_data_tcu_PGN8448"));
+    if(0x00 == (thiz->crf_info.spn8448_status & 0x0F)){
+        log_printf(INF, "TCU: TCU  "GRN("待机"));
+    }else if(0x01 == (thiz->crf_info.spn8448_status & 0x0F)){
+        log_printf(INF, "TCU: TCU  "GRN("工作"));
+    }else if(0x02 == (thiz->crf_info.spn8448_status & 0x0F)){
+        log_printf(INF, "TCU: TCU  "GRN("充满"));
+    }else if(0x03 == (thiz->crf_info.spn8448_status & 0x0F)){
+        log_printf(INF, "TCU: TCU  "GRN("告警"));
+    }else if(0x04 == (thiz->crf_info.spn8448_status & 0x0F)){
+        log_printf(INF, "TCU: TCU  "GRN("故障"));
+    }else if((thiz->crf_info.spn8448_status & 0x0F) > 0x04){
+        log_printf(INF, "TCU: TCU  "GRN("工作状态错误"));
+    }
+
+    if(0 == ((thiz->crf_info.spn8448_status & 0x10) >> 4)){//0 0 0 1    0 0 0 0
+        log_printf(INF, "TCU: TCU  "GRN("连接"));
+    }else{
+        log_printf(INF, "TCU: TCU  "GRN("未连接"));
+    }
+
+    if(0 == ((thiz->crf_info.spn8448_status & 0x20) >> 5)){//0 0 1 0    0 0 0 0
+        log_printf(INF, "TCU: TCU  "GRN("急停按钮正常"));
+    }else{
+        log_printf(INF, "TCU: TCU  "GRN("急停按钮异常"));
+    }
+
+    if(0 == ((thiz->crf_info.spn8448_status & 0x40) >> 6)){//0 1 0 0   0 0 0 0
+        log_printf(INF, "TCU: TCU  "GRN("避雷器正常"));
+    }else{
+        log_printf(INF, "TCU: TCU  "GRN("避雷器异常"));
+    }
+
+    if(0 == ((thiz->crf_info.spn8448_status & 0x80) >> 7)){//1 0 0 0   0 0 0 0
+        log_printf(INF, "TCU: TCU  "GRN("充电枪正常"));
+    }else{
+        log_printf(INF, "TCU: TCU  "GRN("充电枪异常"));
+    }
+
+
+    if(0 == (thiz->crf_info.spn8448_otherstatus & 0x01)){
+        log_printf(INF, "TCU: TCU  "GRN("过温正常"));
+    }else{
+        log_printf(INF, "TCU: TCU  "GRN("过温异常"));
+    }
+
+    if(0 == ((thiz->crf_info.spn8448_otherstatus & 0x02)>>1)){
+        log_printf(INF, "TCU: TCU  "GRN("输入电压过压"));
+    }else{
+        log_printf(INF, "TCU: TCU  "GRN("输入电压过压1"));
+    }
+
+    if(0 == ((thiz->crf_info.spn8448_otherstatus & 0x04)>>2)){
+        log_printf(INF, "TCU: TCU  "GRN("输入电压欠压"));
+    }else{
+        log_printf(INF, "TCU: TCU  "GRN("输入电压欠压1"));
+    }
+
+    if(0 == ((thiz->crf_info.spn8448_otherstatus & 0x08)>>3)){
+        log_printf(INF, "TCU: TCU  "GRN("接触器分断"));
+    }else{
+        log_printf(INF, "TCU: TCU  "GRN("接触器闭合"));
+    }
+
+
+    if(0 == ((thiz->crf_info.spn8448_otherstatus & 0x10)>>4)){
+        log_printf(INF, "TCU: TCU  "GRN("车辆控制导引告警"));
+    }else{
+        log_printf(INF, "TCU: TCU  "GRN("车辆控制导引告警1"));
+    }
+
+    if(0 == ((thiz->crf_info.spn8448_otherstatus & 0x20)>>5)){
+        log_printf(INF, "TCU: TCU  "GRN("交流接触器"));
+    }else{
+        log_printf(INF, "TCU: TCU  "GRN("交流接触器1"));
+    }
+
+    if(0 == ((thiz->crf_info.spn8448_otherstatus & 0x40)>>6)){
+        log_printf(INF, "TCU: TCU  "GRN("输出过流"));
+    }else{
+        log_printf(INF, "TCU: TCU  "GRN("输出过流1"));
+    }
+
+    if(0 == ((thiz->crf_info.spn8448_otherstatus & 0x80)>>7)){
+        log_printf(INF, "TCU: TCU  "GRN("输出过流保护动作"));
+    }else{
+        log_printf(INF, "TCU: TCU  "GRN("输出过流保护动作1"));
+    }
+#if 0
     if(0x00 == atoi(thiz->crf_info.spn8448_status)){
         log_printf(INF, "TCU: TCU  "GRN("待机"));
     }else if(0x01 == atoi(thiz->crf_info.spn8448_status)){
@@ -1825,17 +1926,6 @@ int analysis_data_tcu_PGN8448(struct charge_task * thiz){
         log_printf(INF, "TCU: TCU  "GRN("充电枪异常"));
     }
 
-    if(0 == thiz->crf_info.Over_temperature_fault){
-        log_printf(INF, "TCU: TCU  "GRN("过温正常"));
-    }else{
-        log_printf(INF, "TCU: TCU  "GRN("过温异常"));
-    }
-
-    if(0 == thiz->crf_info.Over_temperature_fault){
-        log_printf(INF, "TCU: TCU  "GRN("过温正常"));
-    }else{
-        log_printf(INF, "TCU: TCU  "GRN("过温异常"));
-    }
 
     if(0 == thiz->crf_info.Over_temperature_fault){
         log_printf(INF, "TCU: TCU  "GRN("过温正常"));
@@ -1884,6 +1974,7 @@ int analysis_data_tcu_PGN8448(struct charge_task * thiz){
     }else{
         log_printf(INF, "TCU: TCU  "GRN("输出过流保护动作"));
     }
+#endif
 
 
 	return 0;
