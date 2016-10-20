@@ -281,7 +281,7 @@ struct pgn12544_THB{//TCU心跳帧
 		u8 spn12544_rev;//保留
 		u8 spn12544_ele[2];//数据分辨率：0.1 kWh/位，0 kWh偏移量；数据范围：0~1000 kWh;	（待机过程中此数据项为0）
 		u8 spn12544_time[2];//数据分辨率：1 min/位，0 min偏移量；数据范围：0~6000 min；		（待机过程中此数据项为0）
-
+        u8 spn12544_rev1;//保留
 };
 
 #pragma pack()
@@ -450,25 +450,25 @@ struct tcu_statistics {
 };
 
 typedef enum {
-    I_TRC = 0,
-    I_CRTR = 1,
-    I_TST = 2,
-    I_CRST = 3,
-    I_TTS = 4,
-    I_CRTS = 5,
-    I_TCV = 6,
-    I_CRCV = 7,
-    I_TCP = 8,
-    I_CRCP = 9,
-    I_CSF = 10,
-    I_TRSF = 11,
-    I_CST = 12,
-    I_TRST = 13,
-    I_CCT = 14,
-    I_TRCT = 15,
-    I_CRF = 16,
-    I_CTF = 17,
-    I_THB = 18
+    I_TRC = 0,//充电启动
+    I_CRTR = 1,//启动应答
+    I_TST = 2,//充电停止
+    I_CRST = 3,//充电停止应答
+    I_TTS = 4,//对时
+    I_CRTS = 5,//对时应答
+    I_TCV = 6,//版本校验
+    I_CRCV = 7,//版本校验应答
+    I_TCP = 8,//充电桩参数
+    I_CRCP = 9,//充电桩参数应答
+    I_CSF = 10,//启动完成
+    I_TRSF = 11,//启动完成应答
+    I_CST = 12,//停止完成
+    I_TRST = 13,//停止完成应答
+    I_CCT = 14,//连接确认
+    I_TRCT = 15,//连接确认应答
+    I_CRF = 16,//遥信
+    I_CTF = 17,//遥测
+    I_THB = 18//心跳
 }CAN_PGN_STATISTICS;
 
 typedef enum {

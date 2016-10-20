@@ -22,10 +22,13 @@
 
 
 #define ANALYSIS_ON
-#undef ANALYSIS_ON
+//#undef ANALYSIS_ON
 
 #define SET_DATA
 //#undef SET_DATA
+
+#define  TIMEOUT_ON
+//#undef TIMEOUT_ON
 
 #if 1
 //计费控制单元ＴＣＵ　　　充电机Ｃ
@@ -278,7 +281,7 @@ void Hachiko_packet_heart_beart_notify_proc(Hachiko_EVT evt, void *private,
                 } else {
                     thiz->heartbeat = thiz->period;
                 }
-            }else if ( thiz->stage == 0x08 && task->tcu_heartbeat_stage  == TCU_STAGE_HEAT){//task->tcu_heartbeat_stage
+            }else if ( thiz->stage == TCU_STAGE_HEAT && task->tcu_heartbeat_stage  == TCU_STAGE_HEAT && task->tcu_wait_stage ==TCU_STAGE_INVALID){//task->tcu_heartbeat_stage
             	if ( thiz->heartbeat < thiz->period ) {
 					thiz->heartbeat += 1;
 				} else {
@@ -286,7 +289,7 @@ void Hachiko_packet_heart_beart_notify_proc(Hachiko_EVT evt, void *private,
 					task->tcu_heartbeat_stage  = TCU_STAGE_HEAT;
 					task->tcu_stage  = TCU_STAGE_HEAT;
 				}
-            } else if ( thiz->stage == 0x09 && task->tcu_time_stage  == TCU_STAGE_TIME){//task->tcu_time_stage
+            } else if ( thiz->stage == TCU_STAGE_TIME && task->tcu_time_stage  == TCU_STAGE_TIME && task->tcu_wait_stage ==TCU_STAGE_INVALID){//task->tcu_time_stage
             	if ( thiz->heartbeat < thiz->period ) {
 					thiz->heartbeat += 1;
 				} else {
@@ -306,7 +309,7 @@ void Hachiko_packet_heart_beart_notify_proc(Hachiko_EVT evt, void *private,
          *
          * "连接确认"停机状态确认"和"启动状态成功or失败"不在超时统计范围内
          */
-#if 1
+#ifdef  TIMEOUT_ON
         for ( i = 0;
               (unsigned int)i < (sizeof(statistics) / sizeof(struct tcu_statistics) ) - 2; i++ ) {
             me = &statistics[i];
@@ -337,18 +340,28 @@ void Hachiko_packet_heart_beart_notify_proc(Hachiko_EVT evt, void *private,
                         me->can_silence = 0;
                         task->tcu_err_stage = TCU_ERR_STAGE_INVALID;
                         break;
+                    case TCU_ERR_STAGE_START:
+                        statistics[I_TRC].can_silence = 0;//重新计时
+                        me->can_silence = 0;
+                        task->tcu_err_stage = TCU_ERR_STAGE_INVALID;
+                        break;
+                    case TCU_ERR_STAGE_STOP:
+                        statistics[I_TST].can_silence = 0;//重新计时
+                        me->can_silence = 0;
+                        task->tcu_err_stage = TCU_ERR_STAGE_INVALID;
+                        break;
                 }
             }
             if ( me->can_tolerate_silence < me->can_silence ) {
                 switch (task->tcu_stage) {
-                case TCU_STAGE_HEAT:
-					//log_printf(WRN, "TCU: heart_beat  "RED("timeout"));
-					//task->tcu_stage = TCU_STAGE_HEAT;
-                	break;
-                case TCU_STAGE_TIME:
-					//log_printf(WRN, "TCU: time  "RED("timeout"));
-					//task->tcu_stage = TCU_STAGE_TIME;
-                	break;
+//                case TCU_STAGE_HEAT:
+//					//log_printf(WRN, "TCU: heart_beat  "RED("timeout"));
+//					//task->tcu_stage = TCU_STAGE_HEAT;
+//                	break;
+//                case TCU_STAGE_TIME:
+//					//log_printf(WRN, "TCU: time  "RED("timeout"));
+//					//task->tcu_stage = TCU_STAGE_TIME;
+//                	break;
                 case TCU_STAGE_CHECKVER:
                    // if (me->can_pgn != PGN_CRCV) break;
                     log_printf(WRN, "TCU: check_version "RED("timeout"));
@@ -402,7 +415,7 @@ static int can_packet_callback(
     switch ( ev ) {
     case EVENT_CAN_TIME:
     	log_printf(INF, "TCU: CHARGER now stage to "RED("TCU_STAGE_TIME"));
-        //thiz->tcu_time_stage = TCU_STAGE_TIME;
+        thiz->tcu_time_stage = TCU_STAGE_TIME;
         thiz->tcu_stage = TCU_STAGE_TIME;
     	break;
     case EVENT_CAN_HEART:
@@ -410,7 +423,7 @@ static int can_packet_callback(
         //thiz->tcu_heartbeat.Hachiko_notify_proc=
         //		Hachiko_packet_tcu_heart_beart_notify_proc;
 		log_printf(INF, "TCU: CHARGER now stage to "RED("TCU_STAGE_HEAT"));
-        //thiz->tcu_heartbeat_stage = TCU_STAGE_HEAT;
+        thiz->tcu_heartbeat_stage = TCU_STAGE_HEAT;
         thiz->tcu_stage = TCU_STAGE_HEAT;
     	break;
     case EVENT_CAN_INIT:
@@ -519,12 +532,14 @@ static int can_packet_callback(
 				}
 				break;
             case TCU_STAGE_CONNECT:
+                thiz->tcu_wait_stage = TCU_STAGE_INVALID;
 				if ( generator[TCU_TRCT].heartbeat >= generator[TCU_TRCT].period ) {
 					gen_packet_tcu_PGN5632(thiz, param);
 					generator[TCU_TRCT].heartbeat = 0;
 				}
 				break;
 			case TCU_STAGE_START:
+                thiz->tcu_wait_stage = TCU_STAGE_INVALID;
                 if ( generator[TCU_TRC].heartbeat >= generator[TCU_TRC].period ) {
                    //if(statistics[I_TRC].can_counter <= 5){
 					gen_packet_tcu_PGN256(thiz, param);
@@ -1339,11 +1354,11 @@ int gen_packet_tcu_PGN2304(struct charge_task * thiz, struct event_struct* param
     struct can_pack_generator *gen = &generator[TCU_TCP];
 
     memset(param->buff.tx_buff, 0xFF,  gen->datalen);
-
+#ifndef SET_DATA
     param->buff.tx_buff[0] = 0x00;
     param->buff.tx_buff[1] = 0x00;
     param->buff.tx_buff[2] = 0x00;
-    param->buff.tx_buff[3] = 0x00;
+    param->buff.tx_buff[3] = 0x01;
     param->buff.tx_buff[4] = '1';
     param->buff.tx_buff[5] = '2';
     param->buff.tx_buff[6] = '3';
@@ -1352,13 +1367,14 @@ int gen_packet_tcu_PGN2304(struct charge_task * thiz, struct event_struct* param
 	thiz->tcp_info.spn2304_charger_sn[0] = 0x00;
 	thiz->tcp_info.spn2304_charger_sn[1] = 0x00;
 	thiz->tcp_info.spn2304_charger_sn[2] = 0x00;
-	thiz->tcp_info.spn2304_charger_sn[3] = 0x00;
+    thiz->tcp_info.spn2304_charger_sn[3] = 0x01;
 	thiz->tcp_info.spn2304_charger_region_code[0] = '1';
     thiz->tcp_info.spn2304_charger_region_code[1] = '2';
     thiz->tcp_info.spn2304_charger_region_code[2] = '3';
-    //set_data_tcu_PGN2304(thiz);
-	//memcpy(param->buff.tx_buff, &thiz->tcp_info, sizeof(struct pgn2304_TCP));
-
+#else
+    set_data_tcu_PGN2304(thiz);
+    memcpy(param->buff.tx_buff, &thiz->tcp_info, sizeof(struct pgn2304_TCP));
+#endif
     param->buff_payload = gen->datalen;
     param->can_id = gen->prioriy << 26 | gen->pgn << 8 | CAN_TX_ID_MASK | CAN_EFF_FLAG;
     param->evt_param = EVT_RET_OK;
@@ -1372,7 +1388,7 @@ int set_data_tcu_PGN2304(struct charge_task * thiz){
 	thiz->tcp_info.spn2304_charger_sn[0] = 0x00;
 	thiz->tcp_info.spn2304_charger_sn[1] = 0x00;
 	thiz->tcp_info.spn2304_charger_sn[2] = 0x00;
-	thiz->tcp_info.spn2304_charger_sn[3] = 0x00;
+    thiz->tcp_info.spn2304_charger_sn[3] = 0x01;
 	thiz->tcp_info.spn2304_charger_region_code[0] = '1';
     thiz->tcp_info.spn2304_charger_region_code[1] = '2';
     thiz->tcp_info.spn2304_charger_region_code[2] = '3';
@@ -1385,16 +1401,17 @@ int gen_packet_tcu_PGN256(struct charge_task * thiz, struct event_struct* param)
     struct can_pack_generator *gen = &generator[TCU_TRC];
 
     memset(param->buff.tx_buff, 0xFF, sizeof(struct pgn256_TRC));
-
+#ifndef SET_DATA
     param->buff.tx_buff[0] = 0;
     param->buff.tx_buff[1] = 1;
 
     memset(&thiz->tcv_info, 0xFF, sizeof(struct pgn256_TRC));
     thiz->trc_info.spn256_port = 0;
     thiz->trc_info.spn256_load_control = 1;
-    //set_data_tcu_PGN256(thiz);
-    //memcpy(param->buff.tx_buff, &thiz->trc_info, sizeof(struct pgn256_TRC));
-
+#else
+    set_data_tcu_PGN256(thiz);
+    memcpy(param->buff.tx_buff, &thiz->trc_info, sizeof(struct pgn256_TRC));
+#endif
     param->buff_payload = gen->datalen;
     param->can_id = gen->prioriy << 26 | gen->pgn << 8 | CAN_TX_ID_MASK | CAN_EFF_FLAG;
     param->evt_param = EVT_RET_OK;
@@ -1418,16 +1435,17 @@ int gen_packet_tcu_PGN768(struct charge_task * thiz, struct event_struct* param)
     struct can_pack_generator *gen = &generator[TCU_TST];
 
     memset(param->buff.tx_buff, 0xFF, sizeof(struct pgn768_TST));
-
+#ifndef SET_DATA
     param->buff.tx_buff[0] = 0;
     param->buff.tx_buff[1] = 0x02;
 
     memset(&thiz->tcv_info, 0xFF, sizeof(struct pgn768_TST));
     thiz->tst_info.spn768_port = 0;
-    thiz->tst_info.spn768_status = 0x02;
-    //set_data_tcu_PGN768(thiz);
-    //memcpy(param->buff.tx_buff, &thiz->tst_info, sizeof(struct pgn768_TST));
-
+    thiz->tst_info.spn768_status = 0x01;
+ #else
+    set_data_tcu_PGN768(thiz);
+    memcpy(param->buff.tx_buff, &thiz->tst_info, sizeof(struct pgn768_TST));
+#endif
     param->buff_payload = gen->datalen;
     param->can_id = gen->prioriy << 26 | gen->pgn << 8 | CAN_TX_ID_MASK | CAN_EFF_FLAG;
     param->evt_param = EVT_RET_OK;
@@ -1439,7 +1457,7 @@ int gen_packet_tcu_PGN768(struct charge_task * thiz, struct event_struct* param)
 int set_data_tcu_PGN768(struct charge_task * thiz){
 	memset(&thiz->tcv_info, 0xFF, sizeof(struct pgn768_TST));
 	thiz->tst_info.spn768_port = 0;
-	thiz->tst_info.spn768_status = 0x02;
+    thiz->tst_info.spn768_status = 0x01;
 	return 0;
 }
 
@@ -1508,7 +1526,7 @@ int gen_packet_tcu_PGN12544(struct charge_task * thiz, struct event_struct* para
     struct can_pack_generator *gen = &generator[TCU_THB];
 
     memset(param->buff.tx_buff, 0xFF, sizeof(struct pgn12544_THB));
-
+#ifndef SET_DATA
 	memset(&thiz->thb_info, 0xFF, sizeof(struct pgn12544_THB));
     thiz->thb_info.spn12544_port = 0;
     thiz->thb_info.spn12544_status = 0x00;
@@ -1517,9 +1535,10 @@ int gen_packet_tcu_PGN12544(struct charge_task * thiz, struct event_struct* para
     thiz->thb_info.spn12544_ele[1] = '2';
     thiz->thb_info.spn12544_time[0] = '0';
     thiz->thb_info.spn12544_time[1] = '2';
-    //set_data_tcu_PGN12544(thiz);
+#else
+    set_data_tcu_PGN12544(thiz);
     memcpy(param->buff.tx_buff, &thiz->thb_info, sizeof(struct pgn12544_THB));
-
+#endif
     param->buff_payload = gen->datalen;
     param->can_id = gen->prioriy << 26 | gen->pgn << 8 | CAN_TX_ID_MASK | CAN_EFF_FLAG;
     param->evt_param = EVT_RET_OK;
@@ -1547,14 +1566,15 @@ int gen_packet_tcu_PGN4608(struct charge_task * thiz, struct event_struct* param
     struct can_pack_generator *gen = &generator[TCU_TRSF];
 
     memset(param->buff.tx_buff, 0xFF, sizeof(struct pgn4608_TRSF));
-
+#ifndef SET_DATA
 	memset(&thiz->trsf_info, 0xFF, sizeof(struct pgn4608_TRSF));
     thiz->trsf_info.spn4608_port = 0;
     thiz->trsf_info.spn4608_load_control = 2;
     thiz->trsf_info.spn4608_status = 0x00;
-    //set_data_tcu_PGN4608(thiz);
+#else
+    set_data_tcu_PGN4608(thiz);
     memcpy(param->buff.tx_buff, &thiz->thb_info, sizeof(struct pgn4608_TRSF));
-
+#endif
     param->buff_payload = gen->datalen;
     param->can_id = gen->prioriy << 26 | gen->pgn << 8 | CAN_TX_ID_MASK | CAN_EFF_FLAG;
     param->evt_param = EVT_RET_OK;
@@ -1579,14 +1599,15 @@ int gen_packet_tcu_PGN5120(struct charge_task * thiz, struct event_struct* param
     struct can_pack_generator *gen = &generator[TCU_TRST];
 
     memset(param->buff.tx_buff, 0xFF, sizeof(struct pgn5120_TRST));
-
+#ifndef SET_DATA
 	memset(&thiz->trst_info, 0xFF, sizeof(struct pgn5120_TRST));
     thiz->trst_info.spn5120_port = 0;
     thiz->trst_info.spn5120_Stop_reason = 0x01;
     thiz->trst_info.spn5120_status = 0x00;
-    //set_data_tcu_PGN5120(thiz);
+#else
+    set_data_tcu_PGN5120(thiz);
     memcpy(param->buff.tx_buff, &thiz->trst_info, sizeof(struct pgn5120_TRST));
-
+#endif
     param->buff_payload = gen->datalen;
     param->can_id = gen->prioriy << 26 | gen->pgn << 8 | CAN_TX_ID_MASK | CAN_EFF_FLAG;
     param->evt_param = EVT_RET_OK;
@@ -1611,13 +1632,14 @@ int gen_packet_tcu_PGN5632(struct charge_task * thiz, struct event_struct* param
     struct can_pack_generator *gen = &generator[TCU_TRCT];
 
     memset(param->buff.tx_buff, 0xFF, sizeof(struct pgn5632_TRCT));
+#ifndef SET_DATA
 	memset(&thiz->trct_info, 0xFF, sizeof(struct pgn5632_TRCT));
-
     thiz->trct_info.spn5632_port = 0;
     thiz->trct_info.spn5632_status = 0x00;
-    //set_data_tcu_PGN5632(thiz);
+#else
+    set_data_tcu_PGN5632(thiz);
     memcpy(param->buff.tx_buff, &thiz->thb_info, sizeof(struct pgn5632_TRCT));
-
+#endif
     param->buff_payload = gen->datalen;
     param->can_id = gen->prioriy << 26 | gen->pgn << 8 | CAN_TX_ID_MASK | CAN_EFF_FLAG;
     param->evt_param = EVT_RET_OK;
@@ -1634,7 +1656,6 @@ int set_data_tcu_PGN5632(struct charge_task * thiz){
 }
 
 int recv_data_tcu_PGN512(struct charge_task * thiz,struct event_struct* param){
-
 	memcpy(&thiz->crrc_info, param->buff.rx_buff, sizeof(struct pgn512_CRRC));
 	return 0;
 }
@@ -1690,12 +1711,12 @@ int recv_data_tcu_PGN8704(struct charge_task * thiz,struct event_struct* param){
 
 int analysis_data_tcu_PGN512(struct charge_task * thiz){
     if(0 == thiz->crrc_info.spn512_status){
-		log_printf(INF, "TCU: TCU  "GRN("启动充电成功"));
+        log_printf(INF, "TCU: TCU  "GRN("启动充电...成功"));
         log_printf(INF, "TCU: TCU change stage to "RED("TCU_STAGE_STARTING"));
         thiz->tcu_stage = TCU_STAGE_STARTING;//启动充电...
         thiz->tcu_tmp_stage = TCU_STAGE_STARTING;
 	}else{
-		log_printf(INF, "TCU: TCU  "GRN("启动充电失败"));
+        log_printf(INF, "TCU: TCU  "GRN("启动充电...失败"));
         thiz->tcu_err_stage = TCU_ERR_STAGE_STOP;
 	}
 	return 0;
@@ -1768,7 +1789,7 @@ int analysis_data_tcu_PGN4352(struct charge_task * thiz){
         thiz->tcu_tmp_stage = TCU_STAGE_STATUS;
 	}else{
 		log_printf(INF, "TCU: TCU  "GRN("启动充电失败"));
-        thiz->tcu_err_stage = TCU_ERR_STAGE_CHARGING;
+        thiz->tcu_err_stage = TCU_ERR_STAGE_START;
 	}
 
 	return 0;
@@ -1782,8 +1803,18 @@ int analysis_data_tcu_PGN4864(struct charge_task * thiz){
         thiz->tcu_tmp_stage = TCU_STAGE_STOP_END;
 	}else{
 		log_printf(INF, "TCU: TCU  "GRN("停止充电失败"));
-        thiz->tcu_err_stage = TCU_ERR_STAGE_CHARGING;
-	}
+        thiz->tcu_err_stage = TCU_ERR_STAGE_STOP_STATUS;
+    }
+
+    if(1 == thiz->cst_info.spn4864_Stop_reason){
+        log_printf(INF, "TCU: TCU  "GRN("计费控制单元控制停止充电"));
+         log_printf(INF, "TCU: TCU change stage to "RED("TCU_STAGE_STOP_END 停止心跳  停止对时"));
+        thiz->tcu_stage = TCU_STAGE_STOP_END;
+        thiz->tcu_tmp_stage = TCU_STAGE_STOP_END;
+    }else{
+        log_printf(INF, "TCU: TCU  "GRN("充电桩故障，充电控制器自行主动终止充电"));
+        thiz->tcu_err_stage = TCU_ERR_STAGE_STOP_STATUS;
+    }
 	return 0;
 }
 
@@ -1803,91 +1834,91 @@ int analysis_data_tcu_PGN5376(struct charge_task * thiz){
 int analysis_data_tcu_PGN8448(struct charge_task * thiz){
     log_printf(INF, "TCU: TCU  "GRN("analysis_data_tcu_PGN8448"));
     if(0x00 == (thiz->crf_info.spn8448_status & 0x0F)){
-        log_printf(INF, "TCU: TCU  "GRN("待机"));
+        log_printf(DBG, "TCU: TCU  "GRN("待机"));
     }else if(0x01 == (thiz->crf_info.spn8448_status & 0x0F)){
-        log_printf(INF, "TCU: TCU  "GRN("工作"));
+        log_printf(DBG, "TCU: TCU  "GRN("工作"));
     }else if(0x02 == (thiz->crf_info.spn8448_status & 0x0F)){
-        log_printf(INF, "TCU: TCU  "GRN("充满"));
+        log_printf(DBG, "TCU: TCU  "GRN("充满"));
     }else if(0x03 == (thiz->crf_info.spn8448_status & 0x0F)){
-        log_printf(INF, "TCU: TCU  "GRN("告警"));
+        log_printf(DBG, "TCU: TCU  "GRN("告警"));
     }else if(0x04 == (thiz->crf_info.spn8448_status & 0x0F)){
-        log_printf(INF, "TCU: TCU  "GRN("故障"));
+        log_printf(DBG, "TCU: TCU  "GRN("故障"));
     }else if((thiz->crf_info.spn8448_status & 0x0F) > 0x04){
-        log_printf(INF, "TCU: TCU  "GRN("工作状态错误"));
+        log_printf(DBG, "TCU: TCU  "GRN("工作状态错误"));
     }
 
     if(0 == ((thiz->crf_info.spn8448_status & 0x10) >> 4)){//0 0 0 1    0 0 0 0
-        log_printf(INF, "TCU: TCU  "GRN("连接"));
+        log_printf(DBG, "TCU: TCU  "GRN("连接"));
     }else{
-        log_printf(INF, "TCU: TCU  "GRN("未连接"));
+        log_printf(DBG, "TCU: TCU  "GRN("未连接"));
     }
 
     if(0 == ((thiz->crf_info.spn8448_status & 0x20) >> 5)){//0 0 1 0    0 0 0 0
-        log_printf(INF, "TCU: TCU  "GRN("急停按钮正常"));
+        log_printf(DBG, "TCU: TCU  "GRN("急停按钮正常"));
     }else{
-        log_printf(INF, "TCU: TCU  "GRN("急停按钮异常"));
+        log_printf(DBG, "TCU: TCU  "GRN("急停按钮异常"));
     }
 
     if(0 == ((thiz->crf_info.spn8448_status & 0x40) >> 6)){//0 1 0 0   0 0 0 0
-        log_printf(INF, "TCU: TCU  "GRN("避雷器正常"));
+        log_printf(DBG, "TCU: TCU  "GRN("避雷器正常"));
     }else{
-        log_printf(INF, "TCU: TCU  "GRN("避雷器异常"));
+        log_printf(DBG, "TCU: TCU  "GRN("避雷器异常"));
     }
 
     if(0 == ((thiz->crf_info.spn8448_status & 0x80) >> 7)){//1 0 0 0   0 0 0 0
-        log_printf(INF, "TCU: TCU  "GRN("充电枪正常"));
+        log_printf(DBG, "TCU: TCU  "GRN("充电枪正常"));
     }else{
-        log_printf(INF, "TCU: TCU  "GRN("充电枪异常"));
+        log_printf(DBG, "TCU: TCU  "GRN("充电枪异常"));
     }
 
 
     if(0 == (thiz->crf_info.spn8448_otherstatus & 0x01)){
-        log_printf(INF, "TCU: TCU  "GRN("过温正常"));
+        log_printf(DBG, "TCU: TCU  "GRN("过温正常"));
     }else{
-        log_printf(INF, "TCU: TCU  "GRN("过温异常"));
+        log_printf(DBG, "TCU: TCU  "GRN("过温异常"));
     }
 
     if(0 == ((thiz->crf_info.spn8448_otherstatus & 0x02)>>1)){
-        log_printf(INF, "TCU: TCU  "GRN("输入电压过压"));
+        log_printf(DBG, "TCU: TCU  "GRN("输入电压过压"));
     }else{
-        log_printf(INF, "TCU: TCU  "GRN("输入电压过压1"));
+        log_printf(DBG, "TCU: TCU  "GRN("输入电压过压1"));
     }
 
     if(0 == ((thiz->crf_info.spn8448_otherstatus & 0x04)>>2)){
-        log_printf(INF, "TCU: TCU  "GRN("输入电压欠压"));
+        log_printf(DBG, "TCU: TCU  "GRN("输入电压欠压"));
     }else{
-        log_printf(INF, "TCU: TCU  "GRN("输入电压欠压1"));
+        log_printf(DBG, "TCU: TCU  "GRN("输入电压欠压1"));
     }
 
     if(0 == ((thiz->crf_info.spn8448_otherstatus & 0x08)>>3)){
-        log_printf(INF, "TCU: TCU  "GRN("接触器分断"));
+        log_printf(DBG, "TCU: TCU  "GRN("接触器分断"));
     }else{
-        log_printf(INF, "TCU: TCU  "GRN("接触器闭合"));
+        log_printf(DBG, "TCU: TCU  "GRN("接触器闭合"));
     }
 
 
     if(0 == ((thiz->crf_info.spn8448_otherstatus & 0x10)>>4)){
-        log_printf(INF, "TCU: TCU  "GRN("车辆控制导引告警"));
+        log_printf(DBG, "TCU: TCU  "GRN("车辆控制导引告警"));
     }else{
-        log_printf(INF, "TCU: TCU  "GRN("车辆控制导引告警1"));
+        log_printf(DBG, "TCU: TCU  "GRN("车辆控制导引告警1"));
     }
 
     if(0 == ((thiz->crf_info.spn8448_otherstatus & 0x20)>>5)){
-        log_printf(INF, "TCU: TCU  "GRN("交流接触器"));
+        log_printf(DBG, "TCU: TCU  "GRN("交流接触器"));
     }else{
-        log_printf(INF, "TCU: TCU  "GRN("交流接触器1"));
+        log_printf(DBG, "TCU: TCU  "GRN("交流接触器1"));
     }
 
     if(0 == ((thiz->crf_info.spn8448_otherstatus & 0x40)>>6)){
-        log_printf(INF, "TCU: TCU  "GRN("输出过流"));
+        log_printf(DBG, "TCU: TCU  "GRN("输出过流"));
     }else{
-        log_printf(INF, "TCU: TCU  "GRN("输出过流1"));
+        log_printf(DBG, "TCU: TCU  "GRN("输出过流1"));
     }
 
     if(0 == ((thiz->crf_info.spn8448_otherstatus & 0x80)>>7)){
-        log_printf(INF, "TCU: TCU  "GRN("输出过流保护动作"));
+        log_printf(DBG, "TCU: TCU  "GRN("输出过流保护动作"));
     }else{
-        log_printf(INF, "TCU: TCU  "GRN("输出过流保护动作1"));
+        log_printf(DBG, "TCU: TCU  "GRN("输出过流保护动作1"));
     }
 #if 0
     if(0x00 == atoi(thiz->crf_info.spn8448_status)){
@@ -1985,6 +2016,10 @@ int analysis_data_tcu_PGN8704(struct charge_task * thiz){
 //    thiz->ctf_info.spn8704_out_vol
 //    thiz->ctf_info.spn8704_out_cur
 //    thiz->ctf_info.spn8704_guid_vol
+    printf("TCU: TCU spn8704_out_vol===%s   %d\n",thiz->ctf_info.spn8704_out_vol,thiz->ctf_info.spn8704_out_vol);
+    printf("TCU: TCU spn8704_out_cur===%s   %d\n",thiz->ctf_info.spn8704_out_cur,thiz->ctf_info.spn8704_out_cur);
+    printf("TCU: TCU spn8704_guid_vol===%s  %d\n",thiz->ctf_info.spn8704_guid_vol,thiz->ctf_info.spn8704_guid_vol);
+
     return 0;
 }
 
