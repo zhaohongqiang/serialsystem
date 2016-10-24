@@ -136,7 +136,7 @@ void tcu_canstop()
     int res;
     printf("11111111\n");
     pthread_attr_destroy(&attr);
-printf("22222222222\n");
+    printf("22222222222\n");
     res = pthread_cancel(tid_write);
     printf("333333333333\n");
     if (res != 0){
@@ -148,6 +148,9 @@ printf("22222222222\n");
     if (res != 0){
         perror("Thread cancel tid_read failed");
     }
+
+    memset(task,0,sizeof(task));
+
 //    res = pthread_cancel(tid_control);
 //    printf("5555555555555\n");
 //    if (res != 0){

@@ -327,6 +327,7 @@ void Hachiko_packet_heart_beart_notify_proc(Hachiko_EVT evt, void *private,
             }else{
                 me->can_silence = 0;
             }*/
+#if 0   //超时处理增加，影响数据接收的错误解析处理
             if(generator[i].stage == task->tcu_stage){
                 switch (task->tcu_err_stage) {
                     case TCU_ERR_STAGE_CHECKVER:
@@ -352,6 +353,16 @@ void Hachiko_packet_heart_beart_notify_proc(Hachiko_EVT evt, void *private,
                         break;
                 }
             }
+#else
+            if(generator[i].stage == task->tcu_stage){
+                switch (task->tcu_err_stage) {
+                    case TCU_ERR_STAGE_TIMEOUT:
+                        me->can_silence = 0;
+                         task->tcu_err_stage = TCU_ERR_STAGE_INVALID;
+                        break;
+                }
+            }
+#endif
             if ( me->can_tolerate_silence < me->can_silence ) {
                 switch (task->tcu_stage) {
 //                case TCU_STAGE_HEAT:
@@ -395,7 +406,7 @@ void Hachiko_packet_heart_beart_notify_proc(Hachiko_EVT evt, void *private,
 //					task->tcu_tmp_stage = TCU_STAGE_ANY;
 //                    break;
                 }
-                me->can_silence = 0;//重新计时
+                me->can_silence = 0;//重新计时  不能注释掉
             }
         }
 #endif
@@ -883,6 +894,7 @@ void *thread_tcu_write_service(void *arg) ___THREAD_ENTRY___
     can_packet_callback(task, EVENT_CAN_INIT, &param);
     can_packet_callback(task, EVENT_CAN_HEART, &param);
     can_packet_callback(task, EVENT_CAN_TIME, &param);
+    //can_packet_callback(task, EVENT_CAN_INIT, &param);
     while ( ! *done ) {
         usleep(5000);
 
