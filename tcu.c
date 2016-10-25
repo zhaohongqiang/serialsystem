@@ -29,94 +29,255 @@
 
 #define  TIMEOUT_ON
 //#undef TIMEOUT_ON
+#define TIMEOUT 5000
 
 #if 1
 //计费控制单元ＴＣＵ　　　充电机Ｃ
 // 数据包生成器信息
 struct can_pack_generator generator[] = {
-	{//充电启动   4   pgn256   0
+    {//充电启动     pgn256   0
 	.stage      =  TCU_STAGE_START,
-	.pgn        =  0x00100,
+    .pgn        =  PGN_TRC,//0x00100,
 	.prioriy    =  4,
-	.datalen    =  2,
+    .datalen    =  8,
 	.period     =  250,
 	.heartbeat   =  0,
-	.mnemonic   =  "TRC"
+    .mnemonic   =  "TRC",
+    .can_silence = 0,
+    .can_tolerate_silence = TIMEOUT,
+    .can_counter = 0
 	},
-	{//充电停止  6   pgn768  1
+    {//Charging启动充电应答TCU     pgn512   1
+    .stage      =  TCU_STAGE_ANY,
+    .pgn        =  PGN_CRTR,//0x00200,
+    .prioriy    =  4,
+    .datalen    =  8,
+    .period     =  250,
+    .heartbeat   =  0,
+    .mnemonic   =  "CRTR",
+    .can_silence = 0,
+    .can_tolerate_silence = TIMEOUT,
+    .can_counter = 0
+    },
+
+    {//充电停止     pgn768  2
 	.stage      =  TCU_STAGE_STOP,
-	.pgn        =  0x000300,
+    .pgn        =  PGN_TST,//0x000300,
 	.prioriy    =  4,
-	.datalen    =  2,
+    .datalen    =  8,
 	.period     =  250,
 	.heartbeat   =  0,
-	.mnemonic   =  "TST"
+    .mnemonic   =  "TST",
+    .can_silence = 0,
+    .can_tolerate_silence = TIMEOUT,
+    .can_counter = 0
 	},
-	{//下发对时  8  pgn1280  2
+    {//应答充电停止     pgn1024  3
+    .stage      =  TCU_STAGE_ANY,
+    .pgn        =  PGN_CRST,//0x000400,
+    .prioriy    =  4,
+    .datalen    =  8,
+    .period     =  250,
+    .heartbeat   =  0,
+    .mnemonic   =  "CRST",
+    .can_silence = 0,
+    .can_tolerate_silence = TIMEOUT,
+    .can_counter = 0
+    },
+
+    {//下发对时    pgn1280  4
 	.stage      =  TCU_STAGE_TIME,
-	.pgn        =  0x000500,
+    .pgn        =  PGN_TTS,//0x000500,
 	.prioriy    =  6,
 	.datalen    =  8,
 	.period     =  502,
 	.heartbeat   =  0,
-	.mnemonic   =  "TTS"
+    .mnemonic   =  "TTS",
+    .can_silence = 0,
+    .can_tolerate_silence = TIMEOUT,
+    .can_counter = 0
 	},
-	{//校验版本  1　pgn1792   3
+    {//应答下发对时    pgn1536  5
+    .stage      =  TCU_STAGE_ANY,
+    .pgn        =  PGN_CRTS,//0x000600,
+    .prioriy    =  6,
+    .datalen    =  8,
+    .period     =  502,
+    .heartbeat   =  0,
+    .mnemonic   =  "CRTS",
+    .can_silence = 0,
+    .can_tolerate_silence = TIMEOUT,
+    .can_counter = 0
+    },
+
+    {//校验版本  　pgn1792   6
 	.stage      =  TCU_STAGE_CHECKVER,
-	.pgn        =  0x000700,
+    .pgn        =  PGN_TCV,//0x000700,
 	.prioriy    =  6,
-	.datalen    =  2,
+    .datalen    =  8,
 	.period     =  500,
 	.heartbeat   =  0,
-	.mnemonic   =  "TCV"
+    .mnemonic   =  "TCV",
+    .can_silence = 0,
+    .can_tolerate_silence = TIMEOUT,
+    .can_counter = 0
 	},
-	{//下发充电参数  2   pgn2304    4
+    {//应答校验版本  　pgn2048   7
+    .stage      =  TCU_STAGE_ANY,
+    .pgn        =  PGN_CRCV,//0x000800,
+    .prioriy    =  6,
+    .datalen    =  8,
+    .period     =  500,
+    .heartbeat   =  0,
+    .mnemonic   =  "CRCV",
+    .can_silence = 0,
+    .can_tolerate_silence = TIMEOUT,
+    .can_counter = 0
+    },
+
+    {//下发充电参数     pgn2304    8
 	.stage      =  TCU_STAGE_PARAMETER,
-	.pgn        =  0x000900,
+    .pgn        =  PGN_TCP,//0x000900,
 	.prioriy    =  6,
-	.datalen    =  7,
+    .datalen    =  8,
 	.period     =  500,
 	.heartbeat   =  0,
-	.mnemonic   =  "TCP"
+    .mnemonic   =  "TCP",
+    .can_silence = 0,
+    .can_tolerate_silence = TIMEOUT,
+    .can_counter = 0
 	},
-	{//启动完成应答  5 pgn4608   5
-    .stage      =  TCU_STAGE_STATUS,
-	.pgn        =  0x001200,
-	.prioriy    =  4,
-	.datalen    =  3,
-	.period     =  250,
-	.heartbeat   =  0,
-	.mnemonic   =  "TRSF"
-	},
-	{//停机完成应答  7 pgn5120   6
-    .stage      =  TCU_STAGE_STOP_END,
-	.pgn        =  0x001400,
-	.prioriy    =  4,
-	.datalen    =  3,
-	.period     =  250,
-	.heartbeat   =  0,
-	.mnemonic   =  "TRST"
-	},
-    {//连接确认采集  3  pgn5632   7
-    .stage      =  TCU_STAGE_CONNECT,
-    .pgn        =  0x001600,
+    {//应答充电参数     pgn2560    9
+    .stage      =  TCU_STAGE_ANY,
+    .pgn        =  PGN_CRCP,//0x000a00,
+    .prioriy    =  6,
+    .datalen    =  8,
+    .period     =  500,
+    .heartbeat   =  0,
+    .mnemonic   =  "CRCP",
+    .can_silence = 0,
+    .can_tolerate_silence = TIMEOUT,
+    .can_counter = 0
+    },
+
+    {//charger启动完成   pgn4352   10
+    .stage      =  TCU_STAGE_ANY,
+    .pgn        =  PGN_CSF,//0x001100,
     .prioriy    =  4,
-    .datalen    =  2,
+    .datalen    =  8,
     .period     =  250,
     .heartbeat   =  0,
-    .mnemonic   =  "TRCT"
+    .mnemonic   =  "CSF",
+    .can_silence = 0,
+    .can_tolerate_silence = TIMEOUT,
+    .can_counter = 0
     },
-    {//心跳  9   pgn12544   8
-    .stage      =  TCU_STAGE_HEAT,
-    .pgn        =  0x003100,
+    {//启动完成应答   pgn4608   11
+    .stage      =  TCU_STAGE_STATUS,
+    .pgn        =  PGN_TRSF,//0x001200,
+	.prioriy    =  4,
+    .datalen    =  8,
+	.period     =  250,
+	.heartbeat   =  0,
+    .mnemonic   =  "TRSF",
+    .can_silence = 0,
+    .can_tolerate_silence = TIMEOUT,
+    .can_counter = 0
+	},
+
+    {//charger停机完成   pgn4864   12
+    .stage      =  TCU_STAGE_ANY,
+    .pgn        =  PGN_CST,//0x001300,
+    .prioriy    =  4,
+    .datalen    =  8,
+    .period     =  250,
+    .heartbeat   =  0,
+    .mnemonic   =  "CST",
+    .can_silence = 0,
+    .can_tolerate_silence = TIMEOUT,
+    .can_counter = 0
+    },
+    {//停机完成应答   pgn5120   13
+    .stage      =  TCU_STAGE_STOP_END,
+    .pgn        =  PGN_TRST,//0x001400,
+	.prioriy    =  4,
+    .datalen    =  8,
+	.period     =  250,
+	.heartbeat   =  0,
+    .mnemonic   =  "TRST",
+    .can_silence = 0,
+    .can_tolerate_silence = TIMEOUT,
+    .can_counter = 0
+	},
+
+    {//连接确认采集应答    pgn5376   14
+    .stage      =  TCU_STAGE_ANY,
+    .pgn        =  PGN_CCT,//0x001500,
+    .prioriy    =  4,
+    .datalen    =  8,
+    .period     =  250,
+    .heartbeat   =  0,
+    .mnemonic   =  "CCT",
+    .can_silence = 0,
+    .can_tolerate_silence = TIMEOUT,
+    .can_counter = 0
+    },
+    {//连接确认采集    pgn5632   15
+    .stage      =  TCU_STAGE_CONNECT,
+    .pgn        =  PGN_TRCT,//0x001600,
+    .prioriy    =  4,
+    .datalen    =  8,
+    .period     =  250,
+    .heartbeat   =  0,
+    .mnemonic   =  "TRCT",
+    .can_silence = 0,
+    .can_tolerate_silence = TIMEOUT,
+    .can_counter = 0
+    },
+
+    {//遥信帧     pgn8488   16
+    .stage      =  TCU_STAGE_ANY,
+    .pgn        =  PGN_CRF,//0x002100,
     .prioriy    =  6,
     .datalen    =  8,
     .period     =  1002,
     .heartbeat   =  0,
-    .mnemonic   =  "THB"
+    .mnemonic   =  "CRF",
+    .can_silence = 0,
+    .can_tolerate_silence = TIMEOUT,
+    .can_counter = 0
+    },
+    {//遥测帧     pgn8704   17
+    .stage      =  TCU_STAGE_ANY,
+    .pgn        =  PGN_CTF,//0x002200,
+    .prioriy    =  6,
+    .datalen    =  8,
+    .period     =  1002,
+    .heartbeat   =  0,
+    .mnemonic   =  "CTF",
+    .can_silence = 0,
+    .can_tolerate_silence = TIMEOUT,
+    .can_counter = 0
+    },
+
+    {//心跳     pgn12544   18
+    .stage      =  TCU_STAGE_HEAT,
+    .pgn        =  PGN_THB,//0x003100,
+    .prioriy    =  6,
+    .datalen    =  8,
+    .period     =  1002,
+    .heartbeat   =  0,
+    .mnemonic   =  "THB",
+    .can_silence = 0,
+    .can_tolerate_silence = TIMEOUT,
+    .can_counter = 0
     }
+
+
 };
 
+
+#if 0
 // CAN 数据包统计结构
 struct tcu_statistics statistics[] = {
     {//0
@@ -235,6 +396,7 @@ struct tcu_statistics statistics[] = {
     }
    };
 #endif
+#endif
 
 //void Hachiko_packet_tcu_heart_beart_notify_proc(Hachiko_EVT evt, void *private,
 //                            const struct Hachiko_food *self)
@@ -270,7 +432,7 @@ void Hachiko_packet_heart_beart_notify_proc(Hachiko_EVT evt, void *private,
     if (evt == HACHIKO_TIMEOUT ) {
         int i = 0;
         struct can_pack_generator *thiz;
-        struct tcu_statistics *me;
+        struct can_pack_generator *me;
         for ( i = 0;
               (unsigned int)i < sizeof(generator) / sizeof(struct can_pack_generator); i++ ) {
             thiz = &generator[i];
@@ -311,10 +473,10 @@ void Hachiko_packet_heart_beart_notify_proc(Hachiko_EVT evt, void *private,
          */
 #ifdef  TIMEOUT_ON
         for ( i = 0;
-              (unsigned int)i < (sizeof(statistics) / sizeof(struct tcu_statistics) ) - 2; i++ ) {
-            me = &statistics[i];
+              (unsigned int)i < (sizeof(generator) / sizeof(struct can_pack_generator) ); i++ ) {
+            me = &generator[i];
             if ( generator[i].stage == task->tcu_stage ){
-                me->can_silence += 1;
+                me->can_silence += 1;//generator[i].can_silence += 1;
             }/*else if( generator[i].stage == TCU_STAGE_HEAT ){
             	me->can_silence += 1;//屏蔽心跳超时
             	//me->can_silence = 0;
@@ -331,23 +493,23 @@ void Hachiko_packet_heart_beart_notify_proc(Hachiko_EVT evt, void *private,
             if(generator[i].stage == task->tcu_stage){
                 switch (task->tcu_err_stage) {
                     case TCU_ERR_STAGE_CHECKVER:
-                        printf("tcu_err_stage   statistics[I_TCV].can_silence==%d  i ===%d\n",statistics[I_TCV].can_silence,i);
-                        statistics[I_TCV].can_silence = 0;//重新计时
+                        printf("tcu_err_stage   generator[I_TCV].can_silence==%d  i ===%d\n",generator[I_TCV].can_silence,i);
+                        generator[I_TCV].can_silence = 0;//重新计时
                         me->can_silence = 0;
                         task->tcu_err_stage = TCU_ERR_STAGE_INVALID;
                         break;
                     case TCU_ERR_STAGE_PARAMETER:
-                        statistics[I_TCP].can_silence = 0;//重新计时
+                        generator[I_TCP].can_silence = 0;//重新计时
                         me->can_silence = 0;
                         task->tcu_err_stage = TCU_ERR_STAGE_INVALID;
                         break;
                     case TCU_ERR_STAGE_START:
-                        statistics[I_TRC].can_silence = 0;//重新计时
+                        generator[I_TRC].can_silence = 0;//重新计时
                         me->can_silence = 0;
                         task->tcu_err_stage = TCU_ERR_STAGE_INVALID;
                         break;
                     case TCU_ERR_STAGE_STOP:
-                        statistics[I_TST].can_silence = 0;//重新计时
+                        generator[I_TST].can_silence = 0;//重新计时
                         me->can_silence = 0;
                         task->tcu_err_stage = TCU_ERR_STAGE_INVALID;
                         break;
@@ -357,6 +519,7 @@ void Hachiko_packet_heart_beart_notify_proc(Hachiko_EVT evt, void *private,
             if(generator[i].stage == task->tcu_stage){
                 switch (task->tcu_err_stage) {
                     case TCU_ERR_STAGE_TIMEOUT:
+                        printf("tcu_err_stage   generator[I_TCV].can_silence==%d  i ===%d\n",me->can_silence,i);
                         me->can_silence = 0;
                          task->tcu_err_stage = TCU_ERR_STAGE_INVALID;
                         break;
@@ -373,33 +536,39 @@ void Hachiko_packet_heart_beart_notify_proc(Hachiko_EVT evt, void *private,
 //					//log_printf(WRN, "TCU: time  "RED("timeout"));
 //					//task->tcu_stage = TCU_STAGE_TIME;
 //                	break;
-                case TCU_STAGE_CHECKVER:
-                   // if (me->can_pgn != PGN_CRCV) break;
+                case TCU_STAGE_CHECKVER:                   
                     log_printf(WRN, "TCU: check_version "RED("timeout"));
+                    printf("me->can_tolerate_silence==%d    me->can_silence==%d     i ==%d\n",me->can_tolerate_silence,me->can_silence,i);
+                    me->can_silence = 0;
+                    printf("1111me->can_tolerate_silence==%d    me->can_silence==%d\n",me->can_tolerate_silence,me->can_silence);
                     task->tcu_stage = TCU_STAGE_TIMEOUT;
                     task->tcu_tmp_stage = TCU_STAGE_TIMEOUT;
                     task->tcu_err_stage = (TCU_ERR_STAGE_TIMEOUT | TCU_ERR_STAGE_CHECKVER) ;
+                    generator[I_TCV].can_silence = 0;//重新计时
                     break;
-                case TCU_STAGE_PARAMETER:
-                   // if (me->can_pgn != PGN_CRCP) break;
+                case TCU_STAGE_PARAMETER:                   
                     log_printf(WRN, "TCU: change parameter "RED("timeout"));
+                    me->can_silence = 0;
                     task->tcu_stage = TCU_STAGE_TIMEOUT;
                     task->tcu_tmp_stage = TCU_STAGE_TIMEOUT;
                     task->tcu_err_stage = (TCU_ERR_STAGE_TIMEOUT | TCU_ERR_STAGE_PARAMETER) ;
+                    generator[I_TCP].can_silence = 0;//重新计时
                     break;
-                case TCU_STAGE_START:
-                   // if (me->can_pgn != PGN_CRTR) break;
+                case TCU_STAGE_START:                  
                     log_printf(WRN, "TCU: start charging "RED("timeout"));
+                    me->can_silence = 0;
                     task->tcu_stage = TCU_STAGE_TIMEOUT;
                     task->tcu_tmp_stage = TCU_STAGE_TIMEOUT;
                     task->tcu_err_stage = (TCU_ERR_STAGE_TIMEOUT | TCU_ERR_STAGE_START) ;
+                    generator[I_TRC].can_silence = 0;//重新计时
                     break;
-                case TCU_STAGE_STOP:
-                    //if (me->can_pgn != PGN_CRST) break;
+                case TCU_STAGE_STOP:                   
                     log_printf(WRN, "TCU: stop charging "RED("timeout"));
+                    me->can_silence = 0;
                     task->tcu_stage = TCU_STAGE_TIMEOUT;
                     task->tcu_tmp_stage = TCU_STAGE_TIMEOUT;
                     task->tcu_err_stage = (TCU_ERR_STAGE_TIMEOUT | TCU_ERR_STAGE_STOP) ;
+                    generator[I_TST].can_silence = 0;//重新计时
 					break;
 //                default:
 //					task->tcu_stage = TCU_STAGE_ANY;
@@ -408,6 +577,7 @@ void Hachiko_packet_heart_beart_notify_proc(Hachiko_EVT evt, void *private,
                 }
                 me->can_silence = 0;//重新计时  不能注释掉
             }
+          //}
         }
 #endif
     }
@@ -426,7 +596,7 @@ static int can_packet_callback(
     switch ( ev ) {
     case EVENT_CAN_TIME:
     	log_printf(INF, "TCU: CHARGER now stage to "RED("TCU_STAGE_TIME"));
-        thiz->tcu_time_stage = TCU_STAGE_TIME;
+        //thiz->tcu_time_stage = TCU_STAGE_TIME;
         thiz->tcu_stage = TCU_STAGE_TIME;
     	break;
     case EVENT_CAN_HEART:
@@ -434,7 +604,7 @@ static int can_packet_callback(
         //thiz->tcu_heartbeat.Hachiko_notify_proc=
         //		Hachiko_packet_tcu_heart_beart_notify_proc;
 		log_printf(INF, "TCU: CHARGER now stage to "RED("TCU_STAGE_HEAT"));
-        thiz->tcu_heartbeat_stage = TCU_STAGE_HEAT;
+        //thiz->tcu_heartbeat_stage = TCU_STAGE_HEAT;
         thiz->tcu_stage = TCU_STAGE_HEAT;
     	break;
     case EVENT_CAN_INIT:
@@ -552,7 +722,7 @@ static int can_packet_callback(
 			case TCU_STAGE_START:
                 thiz->tcu_wait_stage = TCU_STAGE_INVALID;
                 if ( generator[TCU_TRC].heartbeat >= generator[TCU_TRC].period ) {
-                   //if(statistics[I_TRC].can_counter <= 5){
+                   //if(generator[I_TRC].can_counter <= 5){
 					gen_packet_tcu_PGN256(thiz, param);
                     //}
 					generator[TCU_TRC].heartbeat = 0;
@@ -645,10 +815,10 @@ int about_packet_reciev_done(struct charge_task *thiz,
 	//log_printf(DBG_LV0, "TCU: packet receive. %08X", param->can_id);
     switch ( param->can_id & 0x00FF00) {
     case PGN_CRCV :// 0x000800, Charging 应答版本校验
-        //statistics[I_TCV].can_counter ++;
-        statistics[I_TCV].can_silence = 0;
-        statistics[I_CRCV].can_counter ++;
-        statistics[I_CRCV].can_silence = 0;
+        //generator[I_TCV].can_counter ++;
+        generator[I_TCV].can_silence = 0;
+        generator[I_CRCV].can_counter ++;
+        generator[I_CRCV].can_silence = 0;
         log_printf(INF, "TCU: TCU  now  "GRN("PGN_CRCV  0x000800   PGN_2048  Charging应答版本校验"));
         if ( thiz->tcu_stage == TCU_STAGE_CHECKVER) {
             log_printf(INF, "TCU: TCU now stage to "YEL("TCU_STAGE_CHECKVER"));
@@ -663,10 +833,10 @@ int about_packet_reciev_done(struct charge_task *thiz,
 		}
         break;
     case PGN_CRCP:
-    	//statistics[I_TCP].can_counter ++;
-		statistics[I_TCP].can_silence = 0;
-    	statistics[I_CRCP].can_counter ++;
-		statistics[I_CRCP].can_silence = 0;
+        //generator[I_TCP].can_counter ++;
+        generator[I_TCP].can_silence = 0;
+        generator[I_CRCP].can_counter ++;
+        generator[I_CRCP].can_silence = 0;
 		log_printf(INF, "TCU: TCU  now  "GRN("PGN_CRCP  0x000A00   PGN_2560  Charging 应答充电参数"));
 		 if ( thiz->tcu_stage == TCU_STAGE_PARAMETER) {
              log_printf(INF, "TCU: TCU now stage to "YEL("TCU_STAGE_PARAMETER"));
@@ -687,8 +857,8 @@ int about_packet_reciev_done(struct charge_task *thiz,
 //		 }
     	break;
     case PGN_CCT:
-    	statistics[I_CCT].can_counter ++;
-		statistics[I_CCT].can_silence = 0;
+        generator[I_CCT].can_counter ++;
+        generator[I_CCT].can_silence = 0;
         log_printf(INF, "TCU: TCU  now  "GRN("PGN_CCT  0x001500    PGN_5376  Charging连接确认 connect"));
 		//printf("now stage ====%d \n", thiz->tcu_stage);
 		//thiz->tcu_cct_stage = TCU_STAGE_CONNECT;
@@ -705,10 +875,10 @@ int about_packet_reciev_done(struct charge_task *thiz,
 		}
     	break;
     case PGN_CRTR:
-    	//statistics[I_TRC].can_counter ++;
-		statistics[I_TRC].can_silence = 0;
-    	statistics[I_CRTR].can_counter ++;
-		statistics[I_CRTR].can_silence = 0;
+        //generator[I_TRC].can_counter ++;
+        generator[I_TRC].can_silence = 0;
+        generator[I_CRTR].can_counter ++;
+        generator[I_CRTR].can_silence = 0;
 		log_printf(INF, "TCU: TCU  now  "GRN("PGN_CRTR    0x000200  PGN_512   Charging应答TCU启动"));
 		 if ( thiz->tcu_stage == TCU_STAGE_START) {			
              log_printf(INF, "TCU: TCU now stage to "YEL("TCU_STAGE_START"));
@@ -723,8 +893,8 @@ int about_packet_reciev_done(struct charge_task *thiz,
 		}
     	break;
     case PGN_CSF:
-    	statistics[I_CSF].can_counter ++;
-		statistics[I_CSF].can_silence = 0;
+        generator[I_CSF].can_counter ++;
+        generator[I_CSF].can_silence = 0;
 		log_printf(INF, "TCU: TCU  now  "GRN("PGN_CSF  0x001100 PGN_4352   Charging启动完成  start finish"));
          if ( thiz->tcu_stage == TCU_STAGE_STARTING) {
              log_printf(INF, "TCU: TCU now stage to "YEL("TCU_STAGE_STARTING"));
@@ -739,10 +909,10 @@ int about_packet_reciev_done(struct charge_task *thiz,
 		}
     	break;
     case PGN_CRST:
-    	//statistics[I_TST].can_counter ++;
-		statistics[I_TST].can_silence = 0;
-    	statistics[I_CRST].can_counter ++;
-		statistics[I_CRST].can_silence = 0;
+        //generator[I_TST].can_counter ++;
+        generator[I_TST].can_silence = 0;
+        generator[I_CRST].can_counter ++;
+        generator[I_CRST].can_silence = 0;
 		log_printf(INF, "TCU: TCU  now  "GRN("PGN_CRST 0x000400   PGN_1024   Charging应答TCU停止充电"));
          if ( thiz->tcu_stage == TCU_STAGE_STOP) {
              log_printf(INF, "TCU: TCU now stage to "YEL("TCU_STAGE_STOP"));
@@ -758,8 +928,8 @@ int about_packet_reciev_done(struct charge_task *thiz,
 		}
     	break;
     case PGN_CST:
-    	statistics[I_CST].can_counter ++;
-		statistics[I_CST].can_silence = 0;
+        generator[I_CST].can_counter ++;
+        generator[I_CST].can_silence = 0;
 		log_printf(INF, "TCU: TCU  now  "GRN("PGN_CST  0x001300  PGN_4864  Charging停止充电完成  stop"));
          /*if ( thiz->tcu_stage == TCU_STAGE_STOP_STATUS)*/ {
             log_printf(INF, "TCU: TCU now stage to "YEL("TCU_STAGE_STOP_STATUS"));
@@ -776,14 +946,14 @@ int about_packet_reciev_done(struct charge_task *thiz,
 		}
     	break;
     case 	PGN_CRTS:
-    	statistics[I_CRTS].can_counter ++;
-		statistics[I_CRTS].can_silence = 0;
+        generator[I_CRTS].can_counter ++;
+        generator[I_CRTS].can_silence = 0;
 		//log_printf(INF, "TCU: TCU  now  "GRN("PGN_CRTS 0x000600 PGN_1536  Charging对时应答"));
 		recv_data_tcu_PGN1536(thiz,param);
     	break;
     case PGN_CRF:
-    	statistics[I_CRF].can_counter ++;
-		statistics[I_CRF].can_silence = 0;
+        generator[I_CRF].can_counter ++;
+        generator[I_CRF].can_silence = 0;
 		log_printf(INF, "TCU: TCU  now  "GRN("PGN_CRF 0x002100 PGN_8448  Charging遥信帧 remote frame"));
 		recv_data_tcu_PGN8448(thiz,param);
 #ifndef ANALYSIS_ON
@@ -791,8 +961,8 @@ int about_packet_reciev_done(struct charge_task *thiz,
 #endif
     	break;
     case PGN_CTF:
-    	statistics[I_CTF].can_counter ++;
-		statistics[I_CTF].can_silence = 0;
+        generator[I_CTF].can_counter ++;
+        generator[I_CTF].can_silence = 0;
 		log_printf(INF, "TCU: TCU  now  "GRN("PGN_CTF 0x002200  PGN_8704  Charging遥测帧  telemetry frame"));
 		recv_data_tcu_PGN8704(thiz,param);
 #ifndef ANALYSIS_ON
@@ -1271,7 +1441,7 @@ void *thread_tcu_control(void *arg) ___THREAD_ENTRY___
             scanf ("%d", &stop);
             getchar();
             for(i=0;i<19;i++){
-                statistics[i].can_silence = 0;
+                generator[i].can_silence = 0;
             }
             if(stop == 1){
                 task->tcu_stage = TCU_STAGE_CHECKVER;
@@ -1343,7 +1513,7 @@ int gen_packet_tcu_PGN1792(struct charge_task * thiz, struct event_struct* param
     param->buff_payload = gen->datalen;
     param->can_id = gen->prioriy << 26 | gen->pgn << 8 | CAN_TX_ID_MASK | CAN_EFF_FLAG;
     param->evt_param = EVT_RET_OK;
-    statistics[I_TCV].can_counter ++;
+    generator[I_TCV].can_counter ++;
 
     return 0;
 }
@@ -1390,7 +1560,7 @@ int gen_packet_tcu_PGN2304(struct charge_task * thiz, struct event_struct* param
     param->buff_payload = gen->datalen;
     param->can_id = gen->prioriy << 26 | gen->pgn << 8 | CAN_TX_ID_MASK | CAN_EFF_FLAG;
     param->evt_param = EVT_RET_OK;
-    statistics[I_TCP].can_counter ++;
+    generator[I_TCP].can_counter ++;
 
     return 0;
 }
@@ -1427,8 +1597,8 @@ int gen_packet_tcu_PGN256(struct charge_task * thiz, struct event_struct* param)
     param->buff_payload = gen->datalen;
     param->can_id = gen->prioriy << 26 | gen->pgn << 8 | CAN_TX_ID_MASK | CAN_EFF_FLAG;
     param->evt_param = EVT_RET_OK;
-    statistics[I_TRC].can_counter ++;
-    //statistics[I_TRC].can_silence = 0;
+    generator[I_TRC].can_counter ++;
+    //generator[I_TRC].can_silence = 0;
     return 0;
 }
 
@@ -1461,7 +1631,7 @@ int gen_packet_tcu_PGN768(struct charge_task * thiz, struct event_struct* param)
     param->buff_payload = gen->datalen;
     param->can_id = gen->prioriy << 26 | gen->pgn << 8 | CAN_TX_ID_MASK | CAN_EFF_FLAG;
     param->evt_param = EVT_RET_OK;
-    statistics[I_TST].can_counter ++;
+    generator[I_TST].can_counter ++;
 
     return 0;
 }
@@ -1521,7 +1691,7 @@ int gen_packet_tcu_PGN1280(struct charge_task * thiz, struct event_struct* param
     param->buff_payload = gen->datalen;
     param->can_id = gen->prioriy << 26 | gen->pgn << 8 | CAN_TX_ID_MASK | CAN_EFF_FLAG;
     param->evt_param = EVT_RET_OK;
-    statistics[I_TTS].can_counter ++;
+    generator[I_TTS].can_counter ++;
 
     return 0;
 }
@@ -1554,7 +1724,7 @@ int gen_packet_tcu_PGN12544(struct charge_task * thiz, struct event_struct* para
     param->buff_payload = gen->datalen;
     param->can_id = gen->prioriy << 26 | gen->pgn << 8 | CAN_TX_ID_MASK | CAN_EFF_FLAG;
     param->evt_param = EVT_RET_OK;
-    statistics[I_THB].can_counter ++;
+    generator[I_THB].can_counter ++;
 
     return 0;
 }
@@ -1590,7 +1760,7 @@ int gen_packet_tcu_PGN4608(struct charge_task * thiz, struct event_struct* param
     param->buff_payload = gen->datalen;
     param->can_id = gen->prioriy << 26 | gen->pgn << 8 | CAN_TX_ID_MASK | CAN_EFF_FLAG;
     param->evt_param = EVT_RET_OK;
-    statistics[I_TRSF].can_counter ++;
+    generator[I_TRSF].can_counter ++;
 
     return 0;
 }
@@ -1623,7 +1793,7 @@ int gen_packet_tcu_PGN5120(struct charge_task * thiz, struct event_struct* param
     param->buff_payload = gen->datalen;
     param->can_id = gen->prioriy << 26 | gen->pgn << 8 | CAN_TX_ID_MASK | CAN_EFF_FLAG;
     param->evt_param = EVT_RET_OK;
-    statistics[I_TRST].can_counter ++;
+    generator[I_TRST].can_counter ++;
 
     return 0;
 }
@@ -1655,7 +1825,7 @@ int gen_packet_tcu_PGN5632(struct charge_task * thiz, struct event_struct* param
     param->buff_payload = gen->datalen;
     param->can_id = gen->prioriy << 26 | gen->pgn << 8 | CAN_TX_ID_MASK | CAN_EFF_FLAG;
     param->evt_param = EVT_RET_OK;
-    statistics[I_TRCT].can_counter ++;
+    generator[I_TRCT].can_counter ++;
 
     return 0;
 }

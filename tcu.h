@@ -156,6 +156,12 @@ struct can_pack_generator {
     unsigned int heartbeat;
     // 数据包名称
     const char *mnemonic;
+    // 数据包静默时间，只针对接受数据包有效
+    unsigned int can_silence;
+    // 接受数据包容忍的沉默时常，针对接收数据有效
+    unsigned int can_tolerate_silence;
+    // 计数器，接收或发送的次数
+    unsigned int can_counter;
 };
 
 
@@ -473,29 +479,25 @@ typedef enum {
 
 typedef enum {
     TCU_TRC = 0,
-    TCU_TST = 1,
-    TCU_TTS = 2,
-    TCU_TCV = 3,
-    TCU_TCP = 4,
-    TCU_TRSF = 5,
-    TCU_TRST = 6,
-    TCU_TRCT = 7,
-    TCU_THB = 8
+    C_CRTR = 1,
+    TCU_TST = 2,
+    C_CRST = 3,
+    TCU_TTS = 4,
+    C_CRTS = 5,
+    TCU_TCV = 6,
+    C_CRCV = 7,
+    TCU_TCP = 8,
+    C_CRCP = 9,
+    C_CSF = 10,
+    TCU_TRSF = 11,
+     C_CST = 12,
+    TCU_TRST = 13,
+    C_CCT = 14,
+    TCU_TRCT = 15,
+    C_CRF = 16,
+    C_CTF = 17,
+    TCU_THB = 18
 }CAN_TCU_GENERATOR;
-
-typedef enum {
-    C_CRTR = 0,
-    C_CRST = 1,
-    C_CRTS = 2,
-    C_CRCV = 3,
-    C_CRCP = 4,
-    C_CSF = 5,
-    C_CST = 6,
-    C_CCT = 7,
-    C_CRF = 8,
-    C_CTF = 9
-}CAN_C_GENERATOR;
-
 
 /*
  * 充电任务描述
