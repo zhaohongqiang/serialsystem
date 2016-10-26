@@ -31,6 +31,9 @@
 //#undef TIMEOUT_ON
 #define TIMEOUT 5000
 
+#define INIT 0xFF
+
+
 #if 1
 //计费控制单元ＴＣＵ　　　充电机Ｃ
 // 数据包生成器信息
@@ -39,7 +42,7 @@ struct can_pack_generator generator[] = {
 	.stage      =  TCU_STAGE_START,
     .pgn        =  PGN_TRC,//0x00100,
 	.prioriy    =  4,
-    .datalen    =  8,
+    .datalen    =  2,
 	.period     =  250,
 	.heartbeat   =  0,
     .mnemonic   =  "TRC",
@@ -51,7 +54,7 @@ struct can_pack_generator generator[] = {
     .stage      =  TCU_STAGE_ANY,
     .pgn        =  PGN_CRTR,//0x00200,
     .prioriy    =  4,
-    .datalen    =  8,
+    .datalen    =  3,
     .period     =  250,
     .heartbeat   =  0,
     .mnemonic   =  "CRTR",
@@ -64,7 +67,7 @@ struct can_pack_generator generator[] = {
 	.stage      =  TCU_STAGE_STOP,
     .pgn        =  PGN_TST,//0x000300,
 	.prioriy    =  4,
-    .datalen    =  8,
+    .datalen    =  2,
 	.period     =  250,
 	.heartbeat   =  0,
     .mnemonic   =  "TST",
@@ -76,7 +79,7 @@ struct can_pack_generator generator[] = {
     .stage      =  TCU_STAGE_ANY,
     .pgn        =  PGN_CRST,//0x000400,
     .prioriy    =  4,
-    .datalen    =  8,
+    .datalen    =  2,
     .period     =  250,
     .heartbeat   =  0,
     .mnemonic   =  "CRST",
@@ -101,7 +104,7 @@ struct can_pack_generator generator[] = {
     .stage      =  TCU_STAGE_ANY,
     .pgn        =  PGN_CRTS,//0x000600,
     .prioriy    =  6,
-    .datalen    =  8,
+    .datalen    =  2,
     .period     =  502,
     .heartbeat   =  0,
     .mnemonic   =  "CRTS",
@@ -114,7 +117,7 @@ struct can_pack_generator generator[] = {
 	.stage      =  TCU_STAGE_CHECKVER,
     .pgn        =  PGN_TCV,//0x000700,
 	.prioriy    =  6,
-    .datalen    =  8,
+    .datalen    =  2,
 	.period     =  500,
 	.heartbeat   =  0,
     .mnemonic   =  "TCV",
@@ -126,7 +129,7 @@ struct can_pack_generator generator[] = {
     .stage      =  TCU_STAGE_ANY,
     .pgn        =  PGN_CRCV,//0x000800,
     .prioriy    =  6,
-    .datalen    =  8,
+    .datalen    =  2,
     .period     =  500,
     .heartbeat   =  0,
     .mnemonic   =  "CRCV",
@@ -139,7 +142,7 @@ struct can_pack_generator generator[] = {
 	.stage      =  TCU_STAGE_PARAMETER,
     .pgn        =  PGN_TCP,//0x000900,
 	.prioriy    =  6,
-    .datalen    =  8,
+    .datalen    =  7,
 	.period     =  500,
 	.heartbeat   =  0,
     .mnemonic   =  "TCP",
@@ -151,7 +154,7 @@ struct can_pack_generator generator[] = {
     .stage      =  TCU_STAGE_ANY,
     .pgn        =  PGN_CRCP,//0x000a00,
     .prioriy    =  6,
-    .datalen    =  8,
+    .datalen    =  1,
     .period     =  500,
     .heartbeat   =  0,
     .mnemonic   =  "CRCP",
@@ -164,7 +167,7 @@ struct can_pack_generator generator[] = {
     .stage      =  TCU_STAGE_ANY,
     .pgn        =  PGN_CSF,//0x001100,
     .prioriy    =  4,
-    .datalen    =  8,
+    .datalen    =  3,
     .period     =  250,
     .heartbeat   =  0,
     .mnemonic   =  "CSF",
@@ -176,7 +179,7 @@ struct can_pack_generator generator[] = {
     .stage      =  TCU_STAGE_STATUS,
     .pgn        =  PGN_TRSF,//0x001200,
 	.prioriy    =  4,
-    .datalen    =  8,
+    .datalen    =  3,
 	.period     =  250,
 	.heartbeat   =  0,
     .mnemonic   =  "TRSF",
@@ -189,7 +192,7 @@ struct can_pack_generator generator[] = {
     .stage      =  TCU_STAGE_ANY,
     .pgn        =  PGN_CST,//0x001300,
     .prioriy    =  4,
-    .datalen    =  8,
+    .datalen    =  3,
     .period     =  250,
     .heartbeat   =  0,
     .mnemonic   =  "CST",
@@ -201,7 +204,7 @@ struct can_pack_generator generator[] = {
     .stage      =  TCU_STAGE_STOP_END,
     .pgn        =  PGN_TRST,//0x001400,
 	.prioriy    =  4,
-    .datalen    =  8,
+    .datalen    =  3,
 	.period     =  250,
 	.heartbeat   =  0,
     .mnemonic   =  "TRST",
@@ -214,7 +217,7 @@ struct can_pack_generator generator[] = {
     .stage      =  TCU_STAGE_ANY,
     .pgn        =  PGN_CCT,//0x001500,
     .prioriy    =  4,
-    .datalen    =  8,
+    .datalen    =  1,
     .period     =  250,
     .heartbeat   =  0,
     .mnemonic   =  "CCT",
@@ -226,7 +229,7 @@ struct can_pack_generator generator[] = {
     .stage      =  TCU_STAGE_CONNECT,
     .pgn        =  PGN_TRCT,//0x001600,
     .prioriy    =  4,
-    .datalen    =  8,
+    .datalen    =  2,
     .period     =  250,
     .heartbeat   =  0,
     .mnemonic   =  "TRCT",
@@ -250,7 +253,7 @@ struct can_pack_generator generator[] = {
     {//遥测帧     pgn8704   17
     .stage      =  TCU_STAGE_ANY,
     .pgn        =  PGN_CTF,//0x002200,
-    .prioriy    =  6,
+    .prioriy    =  7,
     .datalen    =  8,
     .period     =  1002,
     .heartbeat   =  0,
@@ -596,7 +599,7 @@ static int can_packet_callback(
     switch ( ev ) {
     case EVENT_CAN_TIME:
     	log_printf(INF, "TCU: CHARGER now stage to "RED("TCU_STAGE_TIME"));
-        //thiz->tcu_time_stage = TCU_STAGE_TIME;
+        thiz->tcu_time_stage = TCU_STAGE_TIME;
         thiz->tcu_stage = TCU_STAGE_TIME;
     	break;
     case EVENT_CAN_HEART:
@@ -604,7 +607,7 @@ static int can_packet_callback(
         //thiz->tcu_heartbeat.Hachiko_notify_proc=
         //		Hachiko_packet_tcu_heart_beart_notify_proc;
 		log_printf(INF, "TCU: CHARGER now stage to "RED("TCU_STAGE_HEAT"));
-        //thiz->tcu_heartbeat_stage = TCU_STAGE_HEAT;
+        thiz->tcu_heartbeat_stage = TCU_STAGE_HEAT;
         thiz->tcu_stage = TCU_STAGE_HEAT;
     	break;
     case EVENT_CAN_INIT:
@@ -956,7 +959,7 @@ int about_packet_reciev_done(struct charge_task *thiz,
         generator[I_CRF].can_silence = 0;
 		log_printf(INF, "TCU: TCU  now  "GRN("PGN_CRF 0x002100 PGN_8448  Charging遥信帧 remote frame"));
 		recv_data_tcu_PGN8448(thiz,param);
-#ifndef ANALYSIS_ON
+#ifdef ANALYSIS_ON
         analysis_data_tcu_PGN8448(thiz);
 #endif
     	break;
@@ -965,7 +968,7 @@ int about_packet_reciev_done(struct charge_task *thiz,
         generator[I_CTF].can_silence = 0;
 		log_printf(INF, "TCU: TCU  now  "GRN("PGN_CTF 0x002200  PGN_8704  Charging遥测帧  telemetry frame"));
 		recv_data_tcu_PGN8704(thiz,param);
-#ifndef ANALYSIS_ON
+#ifdef ANALYSIS_ON
         analysis_data_tcu_PGN8704(thiz);
 #endif
     	break;
@@ -1491,12 +1494,12 @@ int gen_packet_tcu_PGN1792(struct charge_task * thiz, struct event_struct* param
     //u8 BCD[2] = {0x12,0x10};
     //u8 tmp_bff[12] = "";int i;
 
-    memset(param->buff.tx_buff, 0xFF, sizeof(struct pgn1792_TCV));
+    memset(param->buff.tx_buff, INIT, sizeof(struct pgn1792_TCV));
 
     //param->buff.tx_buff[0] = 12;
     //param->buff.tx_buff[1] = 10;
 
-    //memset(&thiz->tcv_info, 0xFF, sizeof(struct pgn1792_TCV));
+    //memset(&thiz->tcv_info, INIT, sizeof(struct pgn1792_TCV));
 //    dec_bcd = BCDtoDec(BCD, 2);
 //    DectoHex(dec_bcd, tmp_bff, 2);
 //    for(i=0; i<2; i++)
@@ -1520,7 +1523,7 @@ int gen_packet_tcu_PGN1792(struct charge_task * thiz, struct event_struct* param
 
 int set_data_tcu_PGN1792(struct charge_task * thiz){
 	char BCD[5] = "1210";
-	memset(&thiz->tcv_info, 0xFF, sizeof(struct pgn1792_TCV));
+    memset(&thiz->tcv_info, INIT, sizeof(struct pgn1792_TCV));
 	str2bcd(BCD, thiz->tcv_info.spn_tcu_version, 2);
 	//DectoHex(BCDtoDec(BCD,2),thiz->tcv_info.spn_tcu_version,2);
 	printf("thiz->tcv_info==0x%02x 0x%02x\n",thiz->tcv_info.spn_tcu_version[0],thiz->tcv_info.spn_tcu_version[1]);
@@ -1535,7 +1538,7 @@ int gen_packet_tcu_PGN2304(struct charge_task * thiz, struct event_struct* param
 {
     struct can_pack_generator *gen = &generator[TCU_TCP];
 
-    memset(param->buff.tx_buff, 0xFF,  gen->datalen);
+    memset(param->buff.tx_buff, INIT,  gen->datalen);
 #ifndef SET_DATA
     param->buff.tx_buff[0] = 0x00;
     param->buff.tx_buff[1] = 0x00;
@@ -1545,7 +1548,7 @@ int gen_packet_tcu_PGN2304(struct charge_task * thiz, struct event_struct* param
     param->buff.tx_buff[5] = '2';
     param->buff.tx_buff[6] = '3';
 
-    memset(&thiz->tcp_info, 0xFF, sizeof(struct pgn2304_TCP));
+    memset(&thiz->tcp_info, INIT, sizeof(struct pgn2304_TCP));
 	thiz->tcp_info.spn2304_charger_sn[0] = 0x00;
 	thiz->tcp_info.spn2304_charger_sn[1] = 0x00;
 	thiz->tcp_info.spn2304_charger_sn[2] = 0x00;
@@ -1566,7 +1569,7 @@ int gen_packet_tcu_PGN2304(struct charge_task * thiz, struct event_struct* param
 }
 
 int set_data_tcu_PGN2304(struct charge_task * thiz){
-	memset(&thiz->tcp_info, 0xFF, sizeof(struct pgn2304_TCP));
+    memset(&thiz->tcp_info, INIT, sizeof(struct pgn2304_TCP));
 	thiz->tcp_info.spn2304_charger_sn[0] = 0x00;
 	thiz->tcp_info.spn2304_charger_sn[1] = 0x00;
 	thiz->tcp_info.spn2304_charger_sn[2] = 0x00;
@@ -1582,12 +1585,12 @@ int gen_packet_tcu_PGN256(struct charge_task * thiz, struct event_struct* param)
 {
     struct can_pack_generator *gen = &generator[TCU_TRC];
 
-    memset(param->buff.tx_buff, 0xFF, sizeof(struct pgn256_TRC));
+    memset(param->buff.tx_buff, INIT, sizeof(struct pgn256_TRC));
 #ifndef SET_DATA
     param->buff.tx_buff[0] = 0;
     param->buff.tx_buff[1] = 1;
 
-    memset(&thiz->tcv_info, 0xFF, sizeof(struct pgn256_TRC));
+    memset(&thiz->tcv_info, INIT, sizeof(struct pgn256_TRC));
     thiz->trc_info.spn256_port = 0;
     thiz->trc_info.spn256_load_control = 1;
 #else
@@ -1603,7 +1606,7 @@ int gen_packet_tcu_PGN256(struct charge_task * thiz, struct event_struct* param)
 }
 
 int set_data_tcu_PGN256(struct charge_task * thiz){
-	memset(&thiz->tcv_info, 0xFF, sizeof(struct pgn256_TRC));
+    memset(&thiz->tcv_info, INIT, sizeof(struct pgn256_TRC));
 	thiz->trc_info.spn256_port = 0;
     thiz->trc_info.spn256_load_control = 1;
 	return 0;
@@ -1616,12 +1619,12 @@ int gen_packet_tcu_PGN768(struct charge_task * thiz, struct event_struct* param)
 {
     struct can_pack_generator *gen = &generator[TCU_TST];
 
-    memset(param->buff.tx_buff, 0xFF, sizeof(struct pgn768_TST));
+    memset(param->buff.tx_buff, INIT, sizeof(struct pgn768_TST));
 #ifndef SET_DATA
     param->buff.tx_buff[0] = 0;
     param->buff.tx_buff[1] = 0x02;
 
-    memset(&thiz->tcv_info, 0xFF, sizeof(struct pgn768_TST));
+    memset(&thiz->tcv_info, INIT, sizeof(struct pgn768_TST));
     thiz->tst_info.spn768_port = 0;
     thiz->tst_info.spn768_status = 0x01;
  #else
@@ -1637,7 +1640,7 @@ int gen_packet_tcu_PGN768(struct charge_task * thiz, struct event_struct* param)
 }
 
 int set_data_tcu_PGN768(struct charge_task * thiz){
-	memset(&thiz->tcv_info, 0xFF, sizeof(struct pgn768_TST));
+    memset(&thiz->tcv_info, INIT, sizeof(struct pgn768_TST));
 	thiz->tst_info.spn768_port = 0;
     thiz->tst_info.spn768_status = 0x01;
 	return 0;
@@ -1671,7 +1674,7 @@ int gen_packet_tcu_PGN1280(struct charge_task * thiz, struct event_struct* param
 	p = localtime(&tv.tv_sec);
     //printf("time_now:%4d年%02d月%02d日 星期%d %02d:%02d:%02d.%ld\n", 1900+p->tm_year, 1+p->tm_mon, p->tm_mday, ( (p->tm_wday==0)  ? 7 : (p->tm_wday) ),p->tm_hour, p->tm_min, p->tm_sec, tv.tv_usec);
 
-	memset(&thiz->tts_info, 0xFF, sizeof(struct pgn1280_TTS));
+    memset(&thiz->tts_info, INIT, sizeof(struct pgn1280_TTS));
     thiz->tts_info.spn1280_Immediately = 0;
     mm = p->tm_sec*1000 + tv.tv_usec/1000;
     //printf("mm===%d\n",mm);
@@ -1685,7 +1688,7 @@ int gen_packet_tcu_PGN1280(struct charge_task * thiz, struct event_struct* param
 	thiz->tts_info.spn1280_bcd_mon = (p->tm_mon+1) & 0x0f ;//1f
 	thiz->tts_info.spn1280_bcd_year = (p->tm_year-100) & 0xff;
 
-	memset(param->buff.tx_buff, 0xFF, sizeof(struct pgn1280_TTS));
+    memset(param->buff.tx_buff, INIT, sizeof(struct pgn1280_TTS));
 	memcpy(param->buff.tx_buff, &thiz->tts_info, sizeof(struct pgn1280_TTS));
 
     param->buff_payload = gen->datalen;
@@ -1707,9 +1710,9 @@ int gen_packet_tcu_PGN12544(struct charge_task * thiz, struct event_struct* para
 {
     struct can_pack_generator *gen = &generator[TCU_THB];
 
-    memset(param->buff.tx_buff, 0xFF, sizeof(struct pgn12544_THB));
+    memset(param->buff.tx_buff, INIT, sizeof(struct pgn12544_THB));
 #ifndef SET_DATA
-	memset(&thiz->thb_info, 0xFF, sizeof(struct pgn12544_THB));
+    memset(&thiz->thb_info, INIT, sizeof(struct pgn12544_THB));
     thiz->thb_info.spn12544_port = 0;
     thiz->thb_info.spn12544_status = 0x00;
     thiz->thb_info.spn12544_rev = 0x00;
@@ -1731,7 +1734,7 @@ int gen_packet_tcu_PGN12544(struct charge_task * thiz, struct event_struct* para
 
 int set_data_tcu_PGN12544(struct charge_task * thiz){
 
-	memset(&thiz->thb_info, 0xFF, sizeof(struct pgn12544_THB));
+    memset(&thiz->thb_info, INIT, sizeof(struct pgn12544_THB));
 	thiz->thb_info.spn12544_port = 0;
 	thiz->thb_info.spn12544_status = 0x00;
 	thiz->thb_info.spn12544_ele[0] = '0';
@@ -1747,9 +1750,9 @@ int gen_packet_tcu_PGN4608(struct charge_task * thiz, struct event_struct* param
 {
     struct can_pack_generator *gen = &generator[TCU_TRSF];
 
-    memset(param->buff.tx_buff, 0xFF, sizeof(struct pgn4608_TRSF));
+    memset(param->buff.tx_buff, INIT, sizeof(struct pgn4608_TRSF));
 #ifndef SET_DATA
-	memset(&thiz->trsf_info, 0xFF, sizeof(struct pgn4608_TRSF));
+    memset(&thiz->trsf_info, INIT, sizeof(struct pgn4608_TRSF));
     thiz->trsf_info.spn4608_port = 0;
     thiz->trsf_info.spn4608_load_control = 2;
     thiz->trsf_info.spn4608_status = 0x00;
@@ -1767,7 +1770,7 @@ int gen_packet_tcu_PGN4608(struct charge_task * thiz, struct event_struct* param
 
 int set_data_tcu_PGN4608(struct charge_task * thiz){
 
-	memset(&thiz->trsf_info, 0xFF, sizeof(struct pgn4608_TRSF));
+    memset(&thiz->trsf_info, INIT, sizeof(struct pgn4608_TRSF));
 	thiz->trsf_info.spn4608_port = 0;
 	thiz->trsf_info.spn4608_load_control = 2;
 	thiz->trsf_info.spn4608_status = 0x00;
@@ -1780,9 +1783,9 @@ int gen_packet_tcu_PGN5120(struct charge_task * thiz, struct event_struct* param
 {
     struct can_pack_generator *gen = &generator[TCU_TRST];
 
-    memset(param->buff.tx_buff, 0xFF, sizeof(struct pgn5120_TRST));
+    memset(param->buff.tx_buff, INIT, sizeof(struct pgn5120_TRST));
 #ifndef SET_DATA
-	memset(&thiz->trst_info, 0xFF, sizeof(struct pgn5120_TRST));
+    memset(&thiz->trst_info, INIT, sizeof(struct pgn5120_TRST));
     thiz->trst_info.spn5120_port = 0;
     thiz->trst_info.spn5120_Stop_reason = 0x01;
     thiz->trst_info.spn5120_status = 0x00;
@@ -1800,7 +1803,7 @@ int gen_packet_tcu_PGN5120(struct charge_task * thiz, struct event_struct* param
 
 int set_data_tcu_PGN5120(struct charge_task * thiz){
 
-	memset(&thiz->trst_info, 0xFF, sizeof(struct pgn5120_TRST));
+    memset(&thiz->trst_info, INIT, sizeof(struct pgn5120_TRST));
 	thiz->trst_info.spn5120_port = 0;
 	thiz->trst_info.spn5120_Stop_reason = 0x01;
 	thiz->trst_info.spn5120_status = 0x00;
@@ -1813,9 +1816,9 @@ int gen_packet_tcu_PGN5632(struct charge_task * thiz, struct event_struct* param
 {
     struct can_pack_generator *gen = &generator[TCU_TRCT];
 
-    memset(param->buff.tx_buff, 0xFF, sizeof(struct pgn5632_TRCT));
+    memset(param->buff.tx_buff, INIT, sizeof(struct pgn5632_TRCT));
 #ifndef SET_DATA
-	memset(&thiz->trct_info, 0xFF, sizeof(struct pgn5632_TRCT));
+    memset(&thiz->trct_info, INIT, sizeof(struct pgn5632_TRCT));
     thiz->trct_info.spn5632_port = 0;
     thiz->trct_info.spn5632_status = 0x00;
 #else
@@ -1831,7 +1834,7 @@ int gen_packet_tcu_PGN5632(struct charge_task * thiz, struct event_struct* param
 }
 
 int set_data_tcu_PGN5632(struct charge_task * thiz){
-	memset(&thiz->trct_info, 0xFF, sizeof(struct pgn5632_TRCT));
+    memset(&thiz->trct_info, INIT, sizeof(struct pgn5632_TRCT));
 	thiz->trct_info.spn5632_port = 0;
 	thiz->trct_info.spn5632_status = 0x00;
 	return 0;
@@ -1855,7 +1858,7 @@ int recv_data_tcu_PGN1536(struct charge_task * thiz,struct event_struct* param){
 int recv_data_tcu_PGN2048(struct charge_task * thiz,struct event_struct* param){
 
 	memcpy(&thiz->crcv_info, param->buff.rx_buff, sizeof(struct pgn2048_CRCV));
-	printf("thiz->crcv_info==%d %d\n",thiz->crcv_info.spn_charging_version[0],thiz->crcv_info.spn_charging_version[1]);
+    printf("thiz->crcv_info==0x%02x 0x%02x\n",thiz->crcv_info.spn_charging_version[0],thiz->crcv_info.spn_charging_version[1]);
 	return 0;
 }
 
@@ -2198,9 +2201,9 @@ int analysis_data_tcu_PGN8704(struct charge_task * thiz){
 //    thiz->ctf_info.spn8704_out_vol
 //    thiz->ctf_info.spn8704_out_cur
 //    thiz->ctf_info.spn8704_guid_vol
-    printf("TCU: TCU spn8704_out_vol===%s   %d\n",thiz->ctf_info.spn8704_out_vol,thiz->ctf_info.spn8704_out_vol);
-    printf("TCU: TCU spn8704_out_cur===%s   %d\n",thiz->ctf_info.spn8704_out_cur,thiz->ctf_info.spn8704_out_cur);
-    printf("TCU: TCU spn8704_guid_vol===%s  %d\n",thiz->ctf_info.spn8704_guid_vol,thiz->ctf_info.spn8704_guid_vol);
+    printf("TCU: TCU spn8704_out_vol===%d   %d\n",thiz->ctf_info.spn8704_out_vol[0],thiz->ctf_info.spn8704_out_vol[1]);
+    printf("TCU: TCU spn8704_out_cur===%d   %d\n",thiz->ctf_info.spn8704_out_cur[0],thiz->ctf_info.spn8704_out_cur[1]);
+    printf("TCU: TCU spn8704_guid_vol===%d  %d\n",thiz->ctf_info.spn8704_guid_vol[0],thiz->ctf_info.spn8704_guid_vol[1]);
 
     return 0;
 }

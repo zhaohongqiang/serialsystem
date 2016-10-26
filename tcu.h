@@ -169,21 +169,25 @@ struct can_pack_generator {
 struct pgn256_TRC{//启动充电
 		u8 spn256_port;//0-255
 		u8 spn256_load_control;//负荷控制开关 1启用，2关闭，其他无效  根据用户类型提供不同功率输出
+        //u8 Not_use[6];//
 };
 struct pgn512_CRRC{//应答启动充电
 		u8 spn512_port;//0-255
 		u8 spn512_load_control;//负荷控制开关 1启用，2关闭，其他无效  根据用户类型提供不同功率输出
 		u8 spn512_status;//0成功；1失败
+        //u8 Not_use[5];//
 };
 
 struct pgn768_TST{//停止充电
 		u8 spn768_port;//0-255
 		u8 spn768_status;//0x01：计费控制单元正常停止 		0x02: 计费控制单元故障终止
+        //u8 Not_use[6];//
 };
 
 struct pgn1024_CRST{//应答停止充电
 		u8 spn1024_port;//0-255
 		u8 spn1024_status;//0成功；1失败
+        //u8 Not_use[6];//
 };
 
 struct pgn1280_TTS{//下发对时
@@ -201,53 +205,64 @@ struct pgn1280_TTS{//下发对时
 struct pgn1536_CRTS{//应答对时
 		u8 spn1536_Immediately;//0立即执行　１自行选择时间更新
 		u8 spn1536_confirm;//0-对时确认 1-对时拒绝
+        //u8 Not_use[6];//
 };
 
 
 struct pgn1792_TCV{//版本校验
 	 // TCU 通信协议版本号, 12.10
 	    unsigned char spn_tcu_version[2];
+        //u8 Not_use[6];//
 };
 struct pgn2048_CRCV{//版本确认
 	 // Charging 通信协议版本号, 12.10
 	    unsigned char spn_charging_version[2];
+        //u8 Not_use[6];//
 };
 struct pgn2304_TCP{//下发参数
 	   // 充电机编号， 范围0-oxFFFFFFFF
 	    u8 spn2304_charger_sn[4];
 	    // 充电机/充电站所在区域编码 ASCII  3BYTE
 	    u8 spn2304_charger_region_code[3];
+        //u8 Not_use[1];//
 };
 struct pgn2560_CRCP{//应答参数
 		u8 spn2560_charger_status;//0 成功　1 失败
+        //u8 Not_use[7];//
 };
 
 struct pgn4352_CSF{//Charging启动完成状态信息
 		u8 spn4352_port;//0-255
 		u8 spn4352_load_control;//负荷控制开关 1启用，2关闭，其他无效  根据用户类型提供不同功率输出
 		u8 spn4352_status;//0成功；1失败
+        //u8 Not_use[5];//
 };
 struct pgn4608_TRSF{//TCU应答启动完成
 		u8 spn4608_port;//0-255
 		u8 spn4608_load_control;//负荷控制开关 1启用，2关闭，其他无效  根据用户类型提供不同功率输出
 		u8 spn4608_status;//0成功；1失败
+        //u8 Not_use[5];//
 };
 struct pgn4864_CST{//Charging停止充电完成状态信息
 		u8 spn4864_port;//0-255
 		u8 spn4864_Stop_reason;//停止原因 Stop reason
 		u8 spn4864_status;//0成功；1失败
+        //u8 Not_use[5];//
 };
 struct pgn5120_TRST{//TCU应答停止完成
 		u8 spn5120_port;//0-255
 		u8 spn5120_Stop_reason;//停止原因 Stop reason
 		u8 spn5120_status;//0成功；1失败
+        //u8 Not_use[5];//
 };
 struct pgn5376_CCT{//Charging连接确认
 		u8 spn5376_port;//0-255
+        //u8 Not_use[7];//
 };
 struct pgn5632_TRCT{//TCU应答连接确认
 		u8 spn5632_port;//0-255
 		u8 spn5632_status;//0成功；1失败
+        //u8 Not_use[6];//
 };
 struct pgn8448_CRF{//Charging遥信帧
 		u8 spn8448_port;//0-255
@@ -280,6 +295,7 @@ struct pgn8704_CTF{//Charging遥测帧
         u8  spn8704_out_vol[2];//输出电压    精确到小数点后1位0V - 450V
         u8  spn8704_out_cur[2];//输出电流   精确到小数点后2位0A - 70A
         u8  spn8704_guid_vol[2];//导引电压  精确到小数点后2位0A - 12V
+        //u8 Not_use[1];//
 };
 struct pgn12544_THB{//TCU心跳帧
 		u8 spn12544_port;//0-255
