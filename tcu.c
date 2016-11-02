@@ -620,6 +620,8 @@ static int can_packet_callback(
         thiz->tcu_stage = TCU_STAGE_CHECKVER;
         thiz->tcu_tmp_stage = TCU_STAGE_CHECKVER;
         thiz->tcu_wait_stage = TCU_STAGE_INVALID;
+
+        thiz->emter_info.emter_startcharging = true;//add for 电量
         break;
     case EVENT_CAN_RESET:
         // 事件循环函数复位
@@ -957,7 +959,7 @@ int about_packet_reciev_done(struct charge_task *thiz,
     case PGN_CRF:
         generator[I_CRF].can_counter ++;
         generator[I_CRF].can_silence = 0;
-		log_printf(INF, "TCU: TCU  now  "GRN("PGN_CRF 0x002100 PGN_8448  Charging遥信帧 remote frame"));
+        //log_printf(INF, "TCU: TCU  now  "GRN("PGN_CRF 0x002100 PGN_8448  Charging遥信帧 remote frame"));
 		recv_data_tcu_PGN8448(thiz,param);
 #ifdef ANALYSIS_ON
         analysis_data_tcu_PGN8448(thiz);
@@ -966,7 +968,7 @@ int about_packet_reciev_done(struct charge_task *thiz,
     case PGN_CTF:
         generator[I_CTF].can_counter ++;
         generator[I_CTF].can_silence = 0;
-		log_printf(INF, "TCU: TCU  now  "GRN("PGN_CTF 0x002200  PGN_8704  Charging遥测帧  telemetry frame"));
+        //log_printf(INF, "TCU: TCU  now  "GRN("PGN_CTF 0x002200  PGN_8704  Charging遥测帧  telemetry frame"));
 		recv_data_tcu_PGN8704(thiz,param);
 #ifdef ANALYSIS_ON
         analysis_data_tcu_PGN8704(thiz);
@@ -1737,11 +1739,12 @@ int set_data_tcu_PGN12544(struct charge_task * thiz){
     memset(&thiz->thb_info, INIT, sizeof(struct pgn12544_THB));
 	thiz->thb_info.spn12544_port = 0;
 	thiz->thb_info.spn12544_status = 0x00;
-	thiz->thb_info.spn12544_ele[0] = '0';
-	thiz->thb_info.spn12544_ele[1] = '2';
-	thiz->thb_info.spn12544_time[0] = '0';
-	thiz->thb_info.spn12544_time[1] = '2';
-
+    sprintf(thiz->thb_info.spn12544_ele,"%d",(int)((task->emter_info.emter_currpower)*10));//本次充电电量
+    sprintf(thiz->thb_info.spn12544_time,"%d",(int)thiz->charging_time.tcu_charging_time.tv_sec/60);
+//	thiz->thb_info.spn12544_ele[0] = '0';
+//	thiz->thb_info.spn12544_ele[1] = '2';
+//    thiz->thb_info.spn12544_time[0] = '0';
+//	thiz->thb_info.spn12544_time[1] = '2';
 	return 0;
 }
 
@@ -1972,9 +1975,12 @@ int analysis_data_tcu_PGN4352(struct charge_task * thiz){
         log_printf(INF, "TCU: TCU change stage to "RED("TCU_STAGE_STATUS"));
         thiz->tcu_stage = TCU_STAGE_STATUS;
         thiz->tcu_tmp_stage = TCU_STAGE_STATUS;
+        memset(&task->charging_time.start,0,sizeof(struct timeval));
+        gettimeofday(&thiz->charging_time.start,NULL);
+
 	}else{
 		log_printf(INF, "TCU: TCU  "GRN("启动充电失败"));
-        thiz->tcu_err_stage = TCU_ERR_STAGE_START;
+        thiz->tcu_err_stage = TCU_ERR_STAGE_STARTING;
 	}
 
 	return 0;
@@ -2201,9 +2207,29 @@ int analysis_data_tcu_PGN8704(struct charge_task * thiz){
 //    thiz->ctf_info.spn8704_out_vol
 //    thiz->ctf_info.spn8704_out_cur
 //    thiz->ctf_info.spn8704_guid_vol
-    printf("TCU: TCU spn8704_out_vol===%d   %d\n",thiz->ctf_info.spn8704_out_vol[0],thiz->ctf_info.spn8704_out_vol[1]);
-    printf("TCU: TCU spn8704_out_cur===%d   %d\n",thiz->ctf_info.spn8704_out_cur[0],thiz->ctf_info.spn8704_out_cur[1]);
-    printf("TCU: TCU spn8704_guid_vol===%d  %d\n",thiz->ctf_info.spn8704_guid_vol[0],thiz->ctf_info.spn8704_guid_vol[1]);
+    char tmp[10];
+
+    sprintf(tmp,"%d",thiz->ctf_info.spn8704_out_vol[1] + thiz->ctf_info.spn8704_out_vol[0]*256);
+    //tmp = thiz->ctf_info.spn8704_out_vol[1] + thiz->ctf_info.spn8704_out_vol[0]*256;
+//    memset(thiz->ctf_info.spn8704_out_vol,0,2);
+//    memcpy(thiz->ctf_info.spn8704_out_vol,tmp,2);
+    printf("1111tmp ==%s\n",tmp);
+
+    sprintf(tmp,"%d",thiz->ctf_info.spn8704_out_cur[1] + thiz->ctf_info.spn8704_out_cur[0]*256);
+    printf("2222tmp ==%s\n",tmp);
+    //tmp = thiz->ctf_info.spn8704_out_cur[1] + thiz->ctf_info.spn8704_out_cur[0]*256;
+//     memset(thiz->ctf_info.spn8704_out_cur,0,2);
+//    memcpy(thiz->ctf_info.spn8704_out_cur,tmp,2);
+
+    sprintf(tmp,"%d",thiz->ctf_info.spn8704_guid_vol[1] + thiz->ctf_info.spn8704_guid_vol[0]*256);
+    printf("3333tmp ==%s\n",tmp);
+    //tmp = thiz->ctf_info.spn8704_guid_vol[1] + thiz->ctf_info.spn8704_guid_vol[0]*256;
+//     memset(thiz->ctf_info.spn8704_guid_vol,0,2);
+//    memcpy(thiz->ctf_info.spn8704_guid_vol,tmp,2);
+
+//    printf("TCU: TCU spn8704_out_vol===%d\n",atoi(thiz->ctf_info.spn8704_out_vol));
+//    printf("TCU: TCU spn8704_out_cur===%d\n",atoi(thiz->ctf_info.spn8704_out_cur));
+//    printf("TCU: TCU spn8704_guid_vol===%d\n",atoi(thiz->ctf_info.spn8704_guid_vol));
 
     return 0;
 }

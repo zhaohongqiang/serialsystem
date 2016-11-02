@@ -10,6 +10,10 @@
 extern "C" {
 #endif
 
+//#include <time.h>
+#include <sys/time.h>
+#include <stdbool.h>
+
 // 充电机地址
 #define CAN_ADDR_CHARGER   0xF6  // 242
 // TCU地址
@@ -301,9 +305,24 @@ struct pgn12544_THB{//TCU心跳帧
 		u8 spn12544_port;//0-255
 		u8 spn12544_status;//计费控制单元状态信息 0-正常 1-故障
 		u8 spn12544_rev;//保留
-		u8 spn12544_ele[2];//数据分辨率：0.1 kWh/位，0 kWh偏移量；数据范围：0~1000 kWh;	（待机过程中此数据项为0）
-		u8 spn12544_time[2];//数据分辨率：1 min/位，0 min偏移量；数据范围：0~6000 min；		（待机过程中此数据项为0）
+        char spn12544_ele[2];//数据分辨率：0.1 kWh/位，0 kWh偏移量；数据范围：0~1000 kWh;	（待机过程中此数据项为0）
+        char spn12544_time[2];//数据分辨率：1 min/位，0 min偏移量；数据范围：0~6000 min；		（待机过程中此数据项为0）
         u8 spn12544_rev1;//保留
+};
+
+struct Emter_Data{
+        char emter_vol[20];
+        char emter_current[20];
+        char emter_power[20];
+        float emter_startpower;
+        float emter_currpower;
+        bool emter_startcharging;
+};
+
+struct Charging_Time{
+        struct timeval start;
+        struct timeval stop;
+        struct timeval tcu_charging_time;
 };
 
 #pragma pack()
@@ -580,6 +599,8 @@ struct charge_task {
 	struct pgn5376_CCT cct_info;//Charging连接确认
 	struct pgn8448_CRF crf_info;//Charging遥信帧
 	struct pgn8704_CTF ctf_info;//Charging遥测帧
+    struct Emter_Data   emter_info;
+    struct Charging_Time charging_time;
 };
 
 //struct charge_task tom;
