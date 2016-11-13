@@ -601,14 +601,19 @@ static int can_packet_callback(
     	log_printf(INF, "TCU: CHARGER now stage to "RED("TCU_STAGE_TIME"));
         thiz->tcu_time_stage = TCU_STAGE_TIME;
         thiz->tcu_stage = TCU_STAGE_TIME;
+        //thiz->tcu_tmp_stage = TCU_STAGE_CHECKVER;
     	break;
     case EVENT_CAN_HEART:
         thiz->can_tcu_status = CAN_NORMAL;
         //thiz->tcu_heartbeat.Hachiko_notify_proc=
         //		Hachiko_packet_tcu_heart_beart_notify_proc;
+//        thiz->can_heart_beat.Hachiko_notify_proc=
+//                Hachiko_packet_heart_beart_notify_proc;
+//        Hachiko_new(&thiz->can_heart_beat, HACHIKO_AUTO_FEED, 1, NULL);
 		log_printf(INF, "TCU: CHARGER now stage to "RED("TCU_STAGE_HEAT"));
         thiz->tcu_heartbeat_stage = TCU_STAGE_HEAT;
         thiz->tcu_stage = TCU_STAGE_HEAT;
+        //thiz->tcu_tmp_stage = TCU_STAGE_CHECKVER;
     	break;
     case EVENT_CAN_INIT:
         // 事件循环函数初始化
@@ -2045,9 +2050,9 @@ int analysis_data_tcu_PGN8448(struct charge_task * thiz){
     }
 
     if(0 == ((thiz->crf_info.spn8448_status & 0x20) >> 5)){//0 0 1 0    0 0 0 0
-        log_printf(DBG, "TCU: TCU  "GRN("急停按钮正常"));
+        log_printf(DBG, "TCU: TCU  "GRN("急停动作正常"));
     }else{
-        log_printf(DBG, "TCU: TCU  "GRN("急停按钮异常"));
+        log_printf(DBG, "TCU: TCU  "GRN("急停动作告警"));
     }
 
     if(0 == ((thiz->crf_info.spn8448_status & 0x40) >> 6)){//0 1 0 0   0 0 0 0
@@ -2059,7 +2064,7 @@ int analysis_data_tcu_PGN8448(struct charge_task * thiz){
     if(0 == ((thiz->crf_info.spn8448_status & 0x80) >> 7)){//1 0 0 0   0 0 0 0
         log_printf(DBG, "TCU: TCU  "GRN("充电枪正常"));
     }else{
-        log_printf(DBG, "TCU: TCU  "GRN("充电枪异常"));
+        log_printf(DBG, "TCU: TCU  "GRN("充电枪未归位"));
     }
 
 
@@ -2070,15 +2075,15 @@ int analysis_data_tcu_PGN8448(struct charge_task * thiz){
     }
 
     if(0 == ((thiz->crf_info.spn8448_otherstatus & 0x02)>>1)){
-        log_printf(DBG, "TCU: TCU  "GRN("输入电压过压"));
+        log_printf(DBG, "TCU: TCU  "GRN("输入电压正常"));
     }else{
-        log_printf(DBG, "TCU: TCU  "GRN("输入电压过压1"));
+        log_printf(DBG, "TCU: TCU  "GRN("输入电压过压"));
     }
 
     if(0 == ((thiz->crf_info.spn8448_otherstatus & 0x04)>>2)){
-        log_printf(DBG, "TCU: TCU  "GRN("输入电压欠压"));
+        log_printf(DBG, "TCU: TCU  "GRN("输入电压正常"));
     }else{
-        log_printf(DBG, "TCU: TCU  "GRN("输入电压欠压1"));
+        log_printf(DBG, "TCU: TCU  "GRN("输入电压欠压"));
     }
 
     if(0 == ((thiz->crf_info.spn8448_otherstatus & 0x08)>>3)){
@@ -2089,27 +2094,27 @@ int analysis_data_tcu_PGN8448(struct charge_task * thiz){
 
 
     if(0 == ((thiz->crf_info.spn8448_otherstatus & 0x10)>>4)){
-        log_printf(DBG, "TCU: TCU  "GRN("车辆控制导引告警"));
+        log_printf(DBG, "TCU: TCU  "GRN("车辆控制导引正常"));
     }else{
-        log_printf(DBG, "TCU: TCU  "GRN("车辆控制导引告警1"));
+        log_printf(DBG, "TCU: TCU  "GRN("车辆控制导引告警"));
     }
 
     if(0 == ((thiz->crf_info.spn8448_otherstatus & 0x20)>>5)){
-        log_printf(DBG, "TCU: TCU  "GRN("交流接触器"));
+        log_printf(DBG, "TCU: TCU  "GRN("交流接触器正常"));
     }else{
-        log_printf(DBG, "TCU: TCU  "GRN("交流接触器1"));
+        log_printf(DBG, "TCU: TCU  "GRN("交流接触器故障"));
     }
 
     if(0 == ((thiz->crf_info.spn8448_otherstatus & 0x40)>>6)){
-        log_printf(DBG, "TCU: TCU  "GRN("输出过流"));
+        log_printf(DBG, "TCU: TCU  "GRN("输出过流正常"));
     }else{
-        log_printf(DBG, "TCU: TCU  "GRN("输出过流1"));
+        log_printf(DBG, "TCU: TCU  "GRN("输出过流告警"));
     }
 
     if(0 == ((thiz->crf_info.spn8448_otherstatus & 0x80)>>7)){
-        log_printf(DBG, "TCU: TCU  "GRN("输出过流保护动作"));
+        log_printf(DBG, "TCU: TCU  "GRN("输出过流保护动作正常"));
     }else{
-        log_printf(DBG, "TCU: TCU  "GRN("输出过流保护动作1"));
+        log_printf(DBG, "TCU: TCU  "GRN("输出过流保护动作异常"));
     }
 #if 0
     if(0x00 == atoi(thiz->crf_info.spn8448_status)){

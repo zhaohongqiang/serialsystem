@@ -138,6 +138,7 @@ void tcu_canstop()
     pthread_attr_destroy(&attr);
     printf("22222222222\n");
     res = pthread_cancel(tid_write);
+    //pthread_exit();
     printf("333333333333\n");
     if (res != 0){
         perror("Thread cancel tid_write failed");
