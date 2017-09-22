@@ -241,6 +241,39 @@ struct pgn4352_CSF{//Charging启动完成状态信息
 		u8 spn4352_status;//0成功；1失败
         //u8 Not_use[5];//
 };
+struct pgn4352_CSF_DC{//Charging启动完成状态信息
+        u8 spn4352_port;//0-255
+        u8 spn4352_load_control;//负荷控制开关 1启用，2关闭，其他无效  根据用户类型提供不同功率输出
+        u8 spn4352_status;//0成功；1失败
+        u8 spn4352_CTB_ver[3];//充电桩与BMS通讯协议版本号
+        u8 spn4352_BTC_ver[3];//BMS与充电桩通讯协议版本号
+        u8 spn4352_handshake;//0-握手成功 1-握手失败
+        /* 电池类型
+             * 0x01: 铅酸电池
+             * 0x02: 镍氢电池
+             * 0x03: 磷酸铁锂电池
+             * 0x04: 锰酸锂电池
+             * 0x05: 钴酸锂电池
+             * 0x06: 三元材料电池
+             * 0x07: 聚合物锂离子电池
+             * 0x08: 钛酸锂电池
+             * 0xFF: 其他电池
+             */
+        u8 spn4352_battery_type;
+        u8 spn4352_max_temprature;// 最高允许温度，1 度每位，-50度偏移，-50 度 - 200度
+        u8 spn4352_BMS_max_charge_voltage[2];// 最高允许充电电压, 0.1V 每位
+        u8 spn4352_max_charge_volatage_single_battery[2];// 单节电池允许最高充电电压, 0.01V 每位， 0-24V
+        u8 spn4352_max_charge_current[2];// 最高允许充电电流, 0.1A每位，-400A偏移 -400A - 0A
+        u8 spn4352_total_voltage[2];// 整车蓄电池总电压， 0.1V 每位，0-750V
+        u8 spn4352_now_voltage[2];//整车蓄电池电压， 0.1V 每位
+        u8 spn4352_capacity[2];// 整车蓄电池额定容量, 0.1A.H 每位， 0-1000A.H
+        u8 spn4352_energy[2];// 整车蓄电池标称能量, 0.1kW。h每位， 0-1000 kW。h
+        u8 spn4352_soc[2];// 整车蓄电池荷电状态，0.1% 每位，0-100%
+        u8 spn4352_max_output_vol[2];// 最高输出电压, 0.1V 每位， 0-750V
+        u8 spn4352_min_output_vol[2];// 最低输出电压，0.1V 每位，0-750V
+        u8 spn4352_max_output_current[2];// 最大输出电流，0.1A 每位，-400A偏移，范围-400-0 A
+};
+
 struct pgn4608_TRSF{//TCU应答启动完成
 		u8 spn4608_port;//0-255
 		u8 spn4608_load_control;//负荷控制开关 1启用，2关闭，其他无效  根据用户类型提供不同功率输出
@@ -253,12 +286,35 @@ struct pgn4864_CST{//Charging停止充电完成状态信息
 		u8 spn4864_status;//0成功；1失败
         //u8 Not_use[5];//
 };
+struct pgn4864_CST_DC{//Charging停止充电完成状态信息
+        u8 spn4864_port;//0-255
+        u8 spn4864_Stop_reason;//停止原因 Stop reason
+        u8 spn4864_status;//0成功；1失败
+        u8 spn4864_BMS_Stop_reason;//BMS中止充电原因 Stop reason
+        u8 spn4864_BMS_fault_reason[2];//BMS充电故障原因 Stop reason
+        u8 spn4864_BMS_error_reason;//BMS中止错误原因 Stop reason
+        u8 spn4864_stop_soc_status;//中止荷电状态SOC 1% 每位，0%偏移，范围0-100%
+        u8 spn4864_singal_battery_min_vol[2];//动力蓄电池单体最低电压 0.01V 每位, 0V偏移，范围 0- 24V
+        u8 spn4864_singal_battery_max_vol[2]; //动力蓄电池单体最高电压 0.01V 每位, 0V偏移，范围 0- 24V
+        u8 spn4864_battery_min_temp;  //动力蓄电池最低温度 1 度每位， -50度偏移， 范围 -50 - 200
+        u8 spn4864_battery_max_temp;//动力蓄电池最高温度 1 度每位， -50度偏移， 范围 -50 - 200
+        u8 spn4864_CRM_spn2560_timeout;//接收辨识报文超时
+        u8 spn4864_CTS_CML_CRO_timeout;//接收充电机的时间同步和充电机最大输出能力报文超时 接收充电机完成充电准备报文超时
+        u8 spn4864_CCS_CST_timeout;//接收充电机充电状态报文超时  接收充电机中止充电报文超时
+        u8 spn4864_CSD_timeout;//接收充电机统计报文超时 BMS其他错误
+        u8 spn4864_BRM_timeout;//接收BMS辨识报文超时
+        u8 spn4864_BCP_BRO_timeout;//接收电池充电参数报文超时 接收BMS完成充电准备报文超时
+        u8 spn4864_BCS_BCL_BST_timeout;//接收电池充电总状态报文超时 接收电池充电需求报文超时  接收BMS中止充电报文超时
+        u8 spn4864_BSD_timeout;//接收BMS统计报文超时  充电机其他错误
+};
+
 struct pgn5120_TRST{//TCU应答停止完成
 		u8 spn5120_port;//0-255
 		u8 spn5120_Stop_reason;//停止原因 Stop reason
 		u8 spn5120_status;//0成功；1失败
         //u8 Not_use[5];//
 };
+
 struct pgn5376_CCT{//Charging连接确认
 		u8 spn5376_port;//0-255
         //u8 Not_use[7];//
@@ -294,6 +350,16 @@ struct pgn8448_CRF{//Charging遥信帧
         u8 Not_use[3];//
 		u8 Other_faults[2];//其它类型故障  充电机私有告警和故障信息，第1个八位组为告警信息编号，第2个八位组为告警信息值（布尔型, 变化上传；0正常，1异常）
 };
+struct pgn8448_CRF_DC{//Charging遥信帧
+        u8 spn8448_port;//0-255
+        u8 spn8448_status_1;
+        u8 spn8448_status_2;
+        u8 spn8448_status_3;
+        u8 spn8448_status_4;
+        u8 spn8448_status_5;
+        u8 Other_faults[2];//其它类型故障  充电机私有告警和故障信息，第1个八位组为告警信息编号，第2个八位组为告警信息值（布尔型, 变化上传；0正常，1异常）
+};
+
 struct pgn8704_CTF{//Charging遥测帧
 		u8 spn8704_port;//0-255
         u8  spn8704_out_vol[2];//输出电压    精确到小数点后1位0V - 450V
@@ -301,6 +367,19 @@ struct pgn8704_CTF{//Charging遥测帧
         u8  spn8704_guid_vol[2];//导引电压  精确到小数点后2位0A - 12V
         //u8 Not_use[1];//
 };
+struct pgn8704_CTF_DC{//Charging遥测帧
+        u8 spn8704_port;//0-255
+        u8  spn8704_out_vol[2];//输出电压    精确到小数点后1位0V - 950V
+        u8  spn8704_out_cur[2];//输出电流   精确到小数点后2位0A - 400A
+        u8  spn8704_soc[2];//soc 0 - 100
+        u8  spn8704_bat_min_temp[2];//精确到小数点后1位-50℃ ~ +200℃
+        u8  spn8704_bat_max_temp[2];//精确到小数点后1位-50℃ ~ +200℃
+        u8  spn8704_signal_bat_max_vol[2]; //精确到小数点后2位0V - 24V
+        u8  spn8704_signal_bat_min_vol[2]; //精确到小数点后2位0V - 24V
+        u8  spn8704_temp[2]; //精确到小数点后1位-50℃ ~ +90℃
+        u8  spn8704_guid_vol[2];//导引电压  精确到小数点后2位0A - 12V
+};
+
 struct pgn12544_THB{//TCU心跳帧
 		u8 spn12544_port;//0-255
 		u8 spn12544_status;//计费控制单元状态信息 0-正常 1-故障

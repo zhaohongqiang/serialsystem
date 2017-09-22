@@ -785,7 +785,7 @@ static int can_packet_callback(
         param->buff.tx_buff[6] = (thiz->can_tp_param.tp_pgn >> 8 ) & 0xFF;
         param->buff.tx_buff[7] = thiz->can_tp_param.tp_pgn & 0xFF;
         param->buff_payload = 8;
-        param->can_id = 0x1cecf456 | CAN_EFF_FLAG;
+        param->can_id = CAN_TX_ID_MASK | CAN_EFF_FLAG;
         param->evt_param = EVT_RET_OK;
     }
         break;
@@ -802,7 +802,7 @@ static int can_packet_callback(
         param->buff.tx_buff[6] = (thiz->can_tp_param.tp_pgn >> 8 ) & 0xFF;
         param->buff.tx_buff[7] = thiz->can_tp_param.tp_pgn & 0xFF;
         param->buff_payload = 8;
-        param->can_id = 0x1cecf456 | CAN_EFF_FLAG;
+        param->can_id = CAN_TX_ID_MASK | CAN_EFF_FLAG;
         param->evt_param = EVT_RET_OK;
     }
         break;
@@ -1057,7 +1057,7 @@ void *thread_tcu_write_service(void *arg) ___THREAD_ENTRY___
 
     s = socket(PF_CAN, SOCK_RAW, CAN_RAW);
 
-    strcpy(ifr.ifr_name, "can0" );
+    strcpy(ifr.ifr_name, "can1" );
     ioctl(s, SIOCGIFINDEX, &ifr);
 
     addr.can_family = PF_CAN;
@@ -1230,7 +1230,7 @@ void *thread_tcu_read_service(void *arg) ___THREAD_ENTRY___
 
     if ( done == NULL ) done = &mydone;
     s = socket(PF_CAN, SOCK_RAW, CAN_RAW);
-    strcpy(ifr.ifr_name, "can0" );
+    strcpy(ifr.ifr_name, "can1" );
     ioctl(s, SIOCGIFINDEX, &ifr);
     addr.can_family = PF_CAN;
     addr.can_ifindex = ifr.ifr_ifindex;

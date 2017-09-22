@@ -18,16 +18,20 @@
 #include "log.h"
 #include "Hachiko.h"
 #include "global.h"
+#include "echongwang/echong_api.h"
 
 pthread_t tid_read = 0;
 pthread_t tid_write = 0;
 pthread_t tid_control = 0;
+pthread_t echong_send = 0;
 pthread_attr_t attr;
 
 extern void * thread_tcu_write_service(void *) ___THREAD_ENTRY___;
 extern void * thread_tcu_read_service(void *) ___THREAD_ENTRY___;
 extern void * thread_tcu_control(void *) ___THREAD_ENTRY___;
 //extern void * thread_tcu_heartbeat_service(void *)___THREAD_ENTRY___;
+extern void * thread_echong_send_service(void *) ___THREAD_ENTRY___;
+extern void * thread_http_service(void *) ___THREAD_ENTRY___;
 #if 1
 int tcu_canbus()
 {
@@ -116,6 +120,22 @@ int tcu_canbus()
     }
     log_printf(INF, "CAN-BUS thread_tcu_control start up.                           DONE.");
 #endif
+
+#if 0
+    //
+//    ret = pthread_create( & echong_send, &attr, thread_echong_send_service,
+//                          &thread_done[3]);
+    ret = pthread_create( & echong_send, &attr, thread_http_service,
+                          &thread_done[3]);
+    if ( 0 != ret ) {
+        errcode  = 0x1002;
+        log_printf(ERR,
+                   "echong_send start up.                       FAILE!!!!");
+        goto die;
+    }
+    log_printf(INF, "echong_send start up.                           DONE.");
+#endif
+
 
      if ( s == 0 ) {
         pthread_attr_destroy(&attr);
